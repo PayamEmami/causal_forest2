@@ -273,7 +273,7 @@ The key variables
 <p>Some of the key variables we care about are:</p>
 <ul>
 <li><p><code>qsmk</code>: Treatment indicator for quitting smoking (1 = quit between 1971 and 1982, 0 = did not quit).</p></li>
-<li><p><code>wt82_71</code>: Outcome - weight change from 1971 to 1982 (in kg).</p></li>
+<li><p><code>wt82_71</code>: Outcome, weight change from 1971 to 1982 (in kg).</p></li>
 <li><p>Covariates such as:</p>
 <ul>
 <li><code>age</code>: age in years (at baseline, 1971).</li>
@@ -722,7 +722,7 @@ Code
 </section>
 <section id="conclusion" class="level2">
 <h2 class="anchored" data-anchor-id="conclusion">5. Conclusion</h2>
-<p>In this lab, we walked through a complete example of causal inference analysis:</p>
+<p>In this lab, we walked through an example of causal inference analysis:</p>
 <ul>
 <li>Data identification: We identified the treatment (<code>qsmk</code>), outcome (<code>wt82_71</code>), and key covariates (age, sex, education, smoking intensity, etc.) in the NHEFS dataset.</li>
 <li>ATE via G-computation: We fit a linear model to estimate the average effect of smoking cessation on weight gain, finding that quitting smoking is associated with a significant increase in weight (on the order of a few kilograms) after adjusting for confounders.</li>
@@ -736,7 +736,6 @@ Code
 <li>Validate the causal forest by splitting the data or using out-of-sample tests.</li>
 <li>If interested in the theory, consider why each step requires certain assumptions (unconfoundedness, model correctness, etc.), and what the diagnostics are telling us.</li>
 </ul>
-<p>We hope this lab has given you a clearer understanding of how to do causal inference in R, bridging the gap between conceptual formulas and real-world data analysis. The skills practiced here – regression adjustment, using causal machine learning models, and policy derivation, are powerful tools in a researcher’s arsenal for investigating causal questions in observational data.</p>
 </section>
 <section id="do-more" class="level1">
 <h1>Do more!</h1>
