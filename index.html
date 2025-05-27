@@ -678,11 +678,26 @@ Code
 </ul>
 <p>If <code>differential.forest.prediction</code> is significantly less than 1 or not significant, it might mean the forest’s heterogeneity might not be very reliable (perhaps the true effect is more homogeneous than the model suggests, or we might be overfitting heterogeneity). If it’s close to 1 and significant, that gives confidence that the forest captured genuine heterogeneity.</p>
 <p>Another diagnostic: We can use <code>best_linear_projection</code> to summarize how the CATE varies with covariates. This function will essentially run a regression of the forest’s predicted CATE on the covariates (with a doubly robust approach). It gives an interpretable linear approximation to the heterogeneity.</p>
-<p>**Try <code>best_linear_projection</code> on the forest.* * ::: {.callout-tip collapse=“true”} ### Code</p>
+<p><strong>Try <code>best_linear_projection</code> on the forest.</strong></p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-16-contents" aria-controls="callout-16" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Code
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-16" class="callout-16-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
 <div class="sourceCode" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>blp <span class="ot">&lt;-</span> <span class="fu">best_linear_projection</span>(cf_model, <span class="at">A =</span> X)</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>blp</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>The result will list coefficients for each covariate in <code>X</code> (like age, sex, etc.) indicating how the treatment effect correlates with those covariates. For example, if the <code>sex</code> coefficient in the BLP is 1.5, it might suggest that (all else equal) the effect for, say, males vs females differs by 1.5 kg. If <code>smokeintensity</code> has a positive coefficient, it suggests higher baseline intensity leads to larger weight gain upon quitting, etc. Essentially, <code>best_linear_projection</code> is giving a simpler linear story of the heterogeneity that the forest found.</p>
-<p><strong>Important:</strong> These coefficients <strong>are not the same as a direct regression on the outcome</strong>; they specifically target the treatment effect. A variable could have no association with outcome directly but still predict heterogeneity of the effect. :::</p>
+<p><strong>Important:</strong> These coefficients <strong>are not the same as a direct regression on the outcome</strong>; they specifically target the treatment effect. A variable could have no association with outcome directly but still predict heterogeneity of the effect.</p>
+</div>
+</div>
+</div>
 <p>At this point, we have:</p>
 <ul>
 <li>An overall ATE from the forest (<code>ate_forest</code>),</li>
