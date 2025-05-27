@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Causal Inference Lab: Smoking Cessation and Weight Gain (NHEFS Data) – Causal Forest</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-6bd9cfa162949bde0a231f530c97869d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">Causal Forest</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link active" href="./index.html" aria-current="page"> 
+<span class="menu-text">Lab</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./cf.html"> 
+<span class="menu-text">presentation</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#lab-overview" id="toc-lab-overview" class="nav-link" data-scroll-target="#lab-overview">Lab overview:</a></li>
+  <li><a href="#data-setup-and-exploration" id="toc-data-setup-and-exploration" class="nav-link" data-scroll-target="#data-setup-and-exploration">1. Data Setup and Exploration</a></li>
+  <li><a href="#estimating-ate-via-g-computation-standardization" id="toc-estimating-ate-via-g-computation-standardization" class="nav-link" data-scroll-target="#estimating-ate-via-g-computation-standardization">2. Estimating ATE via G-Computation (Standardization)</a>
+  <ul class="collapse">
+  <li><a href="#check-crude-vs-adjusted" id="toc-check-crude-vs-adjusted" class="nav-link" data-scroll-target="#check-crude-vs-adjusted">Check: Crude vs Adjusted</a></li>
+  </ul></li>
+  <li><a href="#causal-forests-for-heterogeneous-treatment-effects-cates" id="toc-causal-forests-for-heterogeneous-treatment-effects-cates" class="nav-link" data-scroll-target="#causal-forests-for-heterogeneous-treatment-effects-cates">3. Causal Forests for Heterogeneous Treatment Effects (CATEs)</a>
+  <ul class="collapse">
+  <li><a href="#variable-importance-in-the-causal-forest" id="toc-variable-importance-in-the-causal-forest" class="nav-link" data-scroll-target="#variable-importance-in-the-causal-forest">3.1 Variable Importance in the Causal Forest</a></li>
+  <li><a href="#checking-causal-forest-calibration-and-interpretation" id="toc-checking-causal-forest-calibration-and-interpretation" class="nav-link" data-scroll-target="#checking-causal-forest-calibration-and-interpretation">3.2 Checking Causal Forest Calibration and Interpretation</a></li>
+  </ul></li>
+  <li><a href="#learning-an-optimal-treatment-assignment-policy" id="toc-learning-an-optimal-treatment-assignment-policy" class="nav-link" data-scroll-target="#learning-an-optimal-treatment-assignment-policy">4. Learning an Optimal Treatment Assignment Policy</a></li>
+  <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion">5. Conclusion</a></li>
+  <li><a href="#do-more" id="toc-do-more" class="nav-link" data-scroll-target="#do-more">Do more!</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Causal Inference Lab: Smoking Cessation and Weight Gain (NHEFS Data)</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>In this lab, we will gain hands-on practice with causal inference methods using data from the National Health and Nutrition Examination Survey Epidemiologic Follow-Up Study (NHEFS).</p>
+<p>Our goal is to investigate the causal effect of smoking cessation on subsequent weight gain. Specifically, we’ll use the <code>nhefs_complete</code> dataset (from the <code>causaldata</code> R package), which has information on individuals’ smoking status and weight change over a 10-year period. The treatment of interest is whether a person quit smoking between 1971 (baseline) and 1982 (follow-up), recorded as <code>qsmk</code> (1 = quit, 0 = did not quit).</p>
+<p>The outcome is the change in weight between 1971 and 1982, recorded as <code>wt82_71</code> (in kilograms).</p>
+<p>We might want to treat several baseline characteristics as covariates (potential confounders), for example: age, sex, education level, baseline smoking intensity, and physical activity measures (<code>exercise</code> and <code>active</code>). These might help us adjust for differences between those who quit and those who did not.</p>
+</section>
+<section id="lab-overview" class="level2">
+<h2 class="anchored" data-anchor-id="lab-overview">Lab overview:</h2>
+<p>We will start by exploring the dataset and identifying the key variables (treatment, outcome, covariates).</p>
+<p>Then we will estimate the Average Treatment Effect (ATE) of quitting smoking on weight gain using G-computation with a linear regression model. Next, we will use a Causal Forest (from the <a href="https://cran.r-project.org/package=grf"><code>grf</code></a> package) to estimate Conditional Average Treatment Effects (CATEs) – i.e., how the effect might differ across individuals. We will evaluate the causal forest model using built-in diagnostics (such as average treatment effect estimation, variable importance, calibration tests, etc.).</p>
+<p>Finally, we will demonstrate how to derive an optimal treatment assignment policy using the <a href="https://cran.r-project.org/package=policytree"><code>policytree</code></a> package. This policy will take the form of a simple decision tree that prescribes treatment (quitting or not) based on covariates, with the aim of maximizing the expected outcome under that policy.</p>
+<p>Code cells are provided and are <em>foldable</em>, meaning you can click to reveal the code and outputs. We encourage you to read the explanations, then write the code and derive the results yourself. The focus is on practical implementation rather than deep theory!</p>
+<p>Let’s get started by loading the data and examining its contents.</p>
+</section>
+<section id="data-setup-and-exploration" class="level2">
+<h2 class="anchored" data-anchor-id="data-setup-and-exploration">1. Data Setup and Exploration</h2>
+<p>First, load the required packages and the <code>nhefs_complete</code> dataset. The <code>causaldata</code> package contains this dataset, and we will also load <code>grf</code> and <code>policytree</code> for later steps. Then we’ll inspect the dataset structure to confirm the variables present.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load necessary packages (install them first if not already installed)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(causaldata)    <span class="co"># Contains the NHEFS dataset</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(grf)           <span class="co"># For causal forests</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(policytree)    <span class="co"># For learning treatment policies</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Load the NHEFS complete-case data</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(<span class="st">"nhefs_complete"</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>nhefs <span class="ot">&lt;-</span> nhefs_complete   <span class="co"># rename for convenience</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Quick overview of the dataset</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(nhefs)        <span class="co"># number of rows and columns</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 1566   67</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(nhefs)[<span class="dv">1</span><span class="sc">:</span><span class="dv">15</span>]  <span class="co"># first 15 variable names for a glimpse</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "seqn"      "qsmk"      "death"     "yrdth"     "modth"     "dadth"    
+ [7] "sbp"       "dbp"       "sex"       "age"       "race"      "income"   
+[13] "marital"   "school"    "education"</code></pre>
+</div>
+</div>
+<p>The <code>dim()</code> output tells us the data has over 1500 observations and dozens of variables (the complete dataset has 67 columns).</p>
+<p>There is also a data frame called <code>nhefs_codebook</code> that includes description for each of the columns of <code>nhefs</code>.</p>
+<p><strong>Try to figure out our key variables</strong></p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+The key variables
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Some of the key variables we care about are:</p>
+<ul>
+<li><p><code>qsmk</code>: Treatment indicator for quitting smoking (1 = quit between 1971 and 1982, 0 = did not quit).</p></li>
+<li><p><code>wt82_71</code>: Outcome - weight change from 1971 to 1982 (in kg).</p></li>
+<li><p>Covariates such as:</p>
+<ul>
+<li><code>age</code>: age in years (at baseline, 1971).</li>
+<li><code>sex</code>: sex of the individual (likely coded as 0/1 for male/female).</li>
+<li><code>education</code>: highest completed years of education (baseline).</li>
+<li><code>smokeintensity</code>: number of cigarettes smoked per day at baseline.</li>
+<li><code>smokeyrs</code>: number of years the person has smoked (baseline).</li>
+<li><code>exercise</code>: physical exercise (possibly 1 = yes if they exercise regularly, 0 = no).</li>
+<li><code>active</code>: physical activity level (e.g., an indicator of an active lifestyle or job).</li>
+<li><code>wt71</code>: baseline weight in 1971 (in kg), and <code>wt82</code>: weight in 1982.</li>
+</ul></li>
+</ul>
+</div>
+</div>
+</div>
+<p>Confirm some basic properties of these variables (types and summary statistics) and check the distribution of the treatment and outcome</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Solution
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="sourceCode" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ensure key variables are in the dataset and check their types</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(nhefs[, <span class="fu">c</span>(<span class="st">"qsmk"</span>, <span class="st">"wt82_71"</span>, <span class="st">"age"</span>, <span class="st">"sex"</span>, <span class="st">"education"</span>, </span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>              <span class="st">"smokeintensity"</span>, <span class="st">"smokeyrs"</span>, <span class="st">"exercise"</span>, <span class="st">"active"</span>, <span class="st">"wt71"</span>)])</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co"># How many people quit vs did not quit?</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(nhefs<span class="sc">$</span>qsmk)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Summary of the outcome overall and by treatment status</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(nhefs<span class="sc">$</span>wt82_71)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="fu">tapply</span>(nhefs<span class="sc">$</span>wt82_71, nhefs<span class="sc">$</span>qsmk, summary)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p><strong>Do we have a relatively balanced data?</strong></p>
+<p><strong>How do you interpret the summar?</strong></p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Interpretation tip
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>From the <code>table(qsmk)</code> output, we see the dataset is imbalanced: a minority of the individuals quit smoking.</p>
+<p>This reflects the observational nature: not everyone quits smoking over the decade. The outcome <code>wt82_71</code> (weight change) can be positive (weight gain) or negative (weight loss). The summary by groups (<code>tapply</code>) shows that those who quit (<code>qsmk=1</code>) experienced higher weight gain on average than those who did not quit (<code>qsmk=0</code>). This is the raw difference in outcomes, which could be due to the effect of quitting but also could be confounded by other factors (e.g., perhaps quitters were different in age or other behaviors).</p>
+<p>If we see, for instance, that the mean weight change for quitters is around +5 kg and for non-quitters is around +2 kg, the crude difference is ~3 kg. However, we should be cautious: this difference does not yet account for confounders. People who quit might systematically differ (e.g., maybe they were heavier or more health-conscious to begin with). We need causal inference methods to estimate the true causal effect of quitting.</p>
+</div>
+</div>
+</div>
+<p><strong>At this stage, you might also explore other covariates e.g., use <code>summary(nhefs$age)</code> or <code>table(nhefs$sex)</code> to get a sense of the population. Are quitters on average older or younger? Male or female? You can stratify by treatment: <code>tapply(nhefs$age, nhefs$qsmk, mean)</code> to see differences</strong></p>
+<p>For a quick visualization, Compare the distribution of weight change for quitters vs non-quitters:</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Solution
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="sourceCode" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot density of weight change by quitting status (base R plotting)</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>wt_noquit <span class="ot">&lt;-</span> nhefs<span class="sc">$</span>wt82_71[nhefs<span class="sc">$</span>qsmk <span class="sc">==</span> <span class="dv">0</span>]</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>wt_quit   <span class="ot">&lt;-</span> nhefs<span class="sc">$</span>wt82_71[nhefs<span class="sc">$</span>qsmk <span class="sc">==</span> <span class="dv">1</span>]</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">density</span>(wt_noquit, <span class="at">na.rm=</span><span class="cn">TRUE</span>), <span class="at">col=</span><span class="st">"blue"</span>, <span class="at">lwd=</span><span class="dv">2</span>,</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>     <span class="at">main=</span><span class="st">"Weight Change Distribution by Smoking Cessation Status"</span>,</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab=</span><span class="st">"Weight change 1971 to 1982 (kg)"</span>)</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(<span class="fu">density</span>(wt_quit, <span class="at">na.rm=</span><span class="cn">TRUE</span>), <span class="at">col=</span><span class="st">"red"</span>, <span class="at">lwd=</span><span class="dv">2</span>)</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">"topright"</span>, <span class="at">legend=</span><span class="fu">c</span>(<span class="st">"Did NOT quit"</span>,<span class="st">"Quit smoking"</span>),</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">col=</span><span class="fu">c</span>(<span class="st">"blue"</span>,<span class="st">"red"</span>), <span class="at">lwd=</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Interpretation tip
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>In the density plot above, we can observe how the weight change outcome is distributed for the two groups. We expect the red curve (quitters) to be shifted to the right (higher weight gains) compared to the blue curve (continuing smokers). Our goal is to estimate this effect more rigorously and adjust for confounding.</p>
+</div>
+</div>
+</div>
+<p>Now that we have familiarized ourselves with the data, let’s move on to estimating the average causal effect using G-computation.</p>
+</section>
+<section id="estimating-ate-via-g-computation-standardization" class="level2">
+<h2 class="anchored" data-anchor-id="estimating-ate-via-g-computation-standardization">2. Estimating ATE via G-Computation (Standardization)</h2>
+<p>G-computation (or regression standardization) is a method to estimate causal effects by modeling the outcome as a function of treatment and covariates, then using that model to compute counterfactual outcomes. In practice, one common approach is:</p>
+<ol type="1">
+<li>Fit a regression model for the outcome <span class="math inline">\(Y\)</span> using treatment <span class="math inline">\(A\)</span> and confounders <span class="math inline">\(X\)</span> as predictors (often an OLS linear model for continuous outcomes).</li>
+<li>Use this model to predict the mean outcome if everyone were treated and the mean outcome if everyone were untreated.</li>
+<li>The difference between these two predicted means is the estimated Average Treatment Effect (ATE).</li>
+</ol>
+<p>Here, we’ll use a simple linear regression (<code>lm</code>) where we predict <code>wt82_71</code> with <code>qsmk</code> and our covariates.</p>
+<p><strong>What variables will you select to include in model? Fit a linear model using <code>lm</code> function.</strong></p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Interpretation tip
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>We can include <code>age, sex, education, smokeintensity, exercise, active</code> (and we might also include baseline weight <code>wt71</code> to adjust for initial body size).</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Code
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="sourceCode" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Define the formula for the outcome model</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>outcome_model_formula <span class="ot">&lt;-</span> wt82_71 <span class="sc">~</span> qsmk <span class="sc">+</span> age <span class="sc">+</span> sex <span class="sc">+</span> education <span class="sc">+</span> </span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>                         smokeintensity <span class="sc">+</span> exercise <span class="sc">+</span> active <span class="sc">+</span> wt71</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit the linear regression model</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>outcome_lm <span class="ot">&lt;-</span> <span class="fu">lm</span>(outcome_model_formula, <span class="at">data =</span> nhefs)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(outcome_lm)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p><strong>How do you interpret this model?</strong></p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Interpretation tip
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-8" class="callout-8-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>After running the model, examine the model summary. The coefficient for <code>qsmk</code> is the regression-adjusted estimate of the effect of quitting smoking on weight change (in kg), holding other covariates constant. We expect this coefficient to be positive (since quitting tends to cause weight gain). For example, the coefficient is around 3, it suggests quitters gained about 3 kg more weight on average than they would have if they hadn’t quit (adjusting for the other factors). The p-value and confidence interval for <code>qsmk</code> will tell us if this effect is statistically significant (likely it is, given known effects).</p>
+</div>
+</div>
+</div>
+<p>Rather than just rely on the coefficient, let’s perform the G-computation explicitly.</p>
+<p><strong>But before going there, why do we actually need a causal model like G-computation?</strong></p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-9-contents" aria-controls="callout-9" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-9" class="callout-9-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>The Regression Coefficient <em>Can</em> Be a Causal Effect… <strong>But Only Under Strong Assumptions</strong></p>
+<p>When you run:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">lm</span>(wt82_71 <span class="sc">~</span> qsmk <span class="sc">+</span> covariates)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>…and look at the coefficient for <code>qsmk</code>, it gives the conditional difference in outcomes between quitters and non-quitters after adjusting for the covariates.</p>
+<p>This can be interpreted as a causal effect, only if the following conditions hold:</p>
+<ol type="1">
+<li><p>No unmeasured confounding: All common causes of both smoking cessation and weight gain are included in the regression model. If you miss any (e.g., mental health, dieting behavior), your estimate is biased.</p></li>
+<li><p>Correct model specification: Linear regression assumes the relationships between variables are linear and additive. If the real relationships are non-linear or involve interactions (e.g., effect of quitting depends on age or smoking intensity), and you don’t model that, your effect estimate can be wrong.</p></li>
+<li><p>No extrapolation / positivity: For each combination of covariates, there must be both treated and untreated individuals (i.e., both quitters and non-quitters). If certain groups never quit (e.g., very heavy smokers), you’re extrapolating outside the data.</p></li>
+</ol>
+<p>G-Computation Is More Transparent About Counterfactual Reasoning</p>
+<p>The benefit of G-computation is not that it gives a different number (in linear models it often gives the same number as the <code>qsmk</code> coefficient!), but rather that:</p>
+<ul>
+<li>It explicitly constructs counterfactuals: what would the outcome be <em>if everyone quit</em> vs <em>if no one quit</em>?</li>
+<li>It works even when your model has nonlinear terms or interactions.</li>
+<li>It makes it clear that you’re simulating a world where treatment is assigned differently — which is at the heart of causal inference.</li>
+</ul>
+<p>So G-computation helps you see and understand the assumptions you’re making — and makes causal thinking explicit.</p>
+</div>
+</div>
+</div>
+<ul>
+<li>We use the fitted model to predict each individual’s outcome under <code>treatment = 1</code> (everyone quits) and under <code>treatment = 0</code> (no one quits).</li>
+<li>Then we take the average of these predictions to get <span class="math inline">\(E[Y(1)]\)</span> and <span class="math inline">\(E[Y(0)]\)</span>.</li>
+<li>The difference <span class="math inline">\(E[Y(1)] - E[Y(0)]\)</span> is the ATE.</li>
+</ul>
+<p><strong>How would you do G-computation in R?</strong></p>
+<p><strong>How do you interpret the results?</strong></p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-10-contents" aria-controls="callout-10" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Code
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-10" class="callout-10-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="sourceCode" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># G-computation: predict outcomes if everyone is treated vs everyone untreated</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co"># First, make copies of the data with qsmk set to 1 and 0</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>data_treated <span class="ot">&lt;-</span> nhefs</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>data_untreated <span class="ot">&lt;-</span> nhefs</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>data_treated<span class="sc">$</span>qsmk <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>data_untreated<span class="sc">$</span>qsmk <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Predict outcomes under each scenario</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>y_hat_treated   <span class="ot">&lt;-</span> <span class="fu">predict</span>(outcome_lm, <span class="at">newdata =</span> data_treated)</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>y_hat_untreated <span class="ot">&lt;-</span> <span class="fu">predict</span>(outcome_lm, <span class="at">newdata =</span> data_untreated)</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate average predicted outcomes and ATE</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(y_hat_treated)    <span class="co"># E[Y(1)] </span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(y_hat_untreated)  <span class="co"># E[Y(0)]</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>ate_gcomp <span class="ot">&lt;-</span> <span class="fu">mean</span>(y_hat_treated) <span class="sc">-</span> <span class="fu">mean</span>(y_hat_untreated)</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>ate_gcomp</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The result <code>ate_gcomp</code> is our G-computation estimate of the ATE. This should closely match the <code>qsmk</code> coefficient from the linear model (since in a linear model without interaction terms, the effect is constant).</p>
+<p>Interpretation: <code>ate_gcomp</code> comes out to ~3.2 (kg). That would mean <em>we estimate that, on average, quitting smoking causes an increase of 3.2 kg in body weight over 10 years</em> (with all else being equal). This is our causal effect estimate under the assumptions that we have controlled for all confounders in the model and that the linear model is correctly specified.</p>
+</div>
+</div>
+</div>
+<p>Are all the confounders properly adjusted for? If we omitted something like <code>smokeyrs</code> or other health indicators, those could bias results. In a real analysis, careful selection of covariates and model checking would be necessary. For our practice, we’ll proceed with the set we have.</p>
+<section id="check-crude-vs-adjusted" class="level3">
+<h3 class="anchored" data-anchor-id="check-crude-vs-adjusted">Check: Crude vs Adjusted</h3>
+<p>It might be illustrative to compare the regression-adjusted ATE with the crude difference in means (unadjusted). We can compute the raw difference in average weight change between quitters and non-quitters for comparison:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>mean_noquit <span class="ot">&lt;-</span> <span class="fu">mean</span>(nhefs<span class="sc">$</span>wt82_71[nhefs<span class="sc">$</span>qsmk<span class="sc">==</span><span class="dv">0</span>])</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>mean_quit   <span class="ot">&lt;-</span> <span class="fu">mean</span>(nhefs<span class="sc">$</span>wt82_71[nhefs<span class="sc">$</span>qsmk<span class="sc">==</span><span class="dv">1</span>])</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(mean_noquit, mean_quit, <span class="at">difference =</span> mean_quit <span class="sc">-</span> mean_noquit)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This gives the unadjusted difference. Typically, the adjusted effect (<code>ate_gcomp</code>) may be a bit lower if some of the difference was due to confounders. For example, if quitters were younger on average (and younger people might gain more weight as they age regardless), the crude difference could overstate the effect of quitting. The regression adjusts for age (and others), potentially yielding a more accurate causal estimate.</p>
+<p>So far, we’ve treated the effect as homogeneous (one number for everyone). Next, we will explore heterogeneous treatment effects using a causal forest.</p>
+</section>
+</section>
+<section id="causal-forests-for-heterogeneous-treatment-effects-cates" class="level2">
+<h2 class="anchored" data-anchor-id="causal-forests-for-heterogeneous-treatment-effects-cates">3. Causal Forests for Heterogeneous Treatment Effects (CATEs)</h2>
+<p>While the ATE is a single summary, the effect of quitting smoking on weight might vary across individuals. For instance, perhaps heavy smokers gain more weight upon quitting than light smokers, or maybe the effect differs by sex or age. To investigate such Conditional Average Treatment Effects (CATEs), we can use a non-parametric method called a Causal Forest.</p>
+<p>Causal Forests (from the <code>grf</code> package) are an extension of random forests that focus on estimating treatment effects rather than just predicting outcomes. They use an algorithm with <em>honest splitting</em> and a splitting criterion designed to maximize differences in treatment effects between branches. Essentially, a causal forest will give us an estimate <span class="math inline">\(\hat{\tau}(x)\)</span> for each unit that is the predicted treatment effect given that unit’s features <span class="math inline">\(x\)</span>.</p>
+<p>Let’s train a causal forest using our data. We need to provide:</p>
+<ul>
+<li><code>Y</code> (outcome vector)</li>
+<li><code>W</code> (treatment indicator vector)</li>
+<li><code>X</code> (covariate matrix/dataframe)</li>
+</ul>
+<p>We should include all the confounders in <code>X</code>. We’ll use the same set as in our regression (age, sex, education, smokeintensity, exercise, active, wt71, etc.). The <code>causal_forest()</code> function will handle the rest. We might specify a random seed for reproducibility.</p>
+<p><strong>Perform the modeling using <code>causal_forest</code> and plot the estimated CATE using <code>hist</code></strong></p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-11-contents" aria-controls="callout-11" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Code
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-11" class="callout-11-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="sourceCode" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Prepare data for causal forest</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>Y <span class="ot">&lt;-</span> <span class="fu">as.vector</span>(nhefs<span class="sc">$</span>wt82_71)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>W <span class="ot">&lt;-</span> <span class="fu">as.vector</span>(nhefs<span class="sc">$</span>qsmk)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Covariate matrix X (exclude outcome and treatment themselves)</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>X <span class="ot">&lt;-</span> nhefs[, <span class="fu">c</span>(<span class="st">"age"</span>, <span class="st">"sex"</span>, <span class="st">"education"</span>, <span class="st">"smokeintensity"</span>, <span class="st">"smokeyrs"</span>,</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>               <span class="st">"exercise"</span>, <span class="st">"active"</span>, <span class="st">"wt71"</span>)]</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert factors to numeric</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>X[] <span class="ot">&lt;-</span> <span class="fu">lapply</span>(X, <span class="cf">function</span>(x) {</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.factor</span>(x) <span class="sc">||</span> <span class="fu">is.character</span>(x)) <span class="fu">as.numeric</span>(<span class="fu">as.factor</span>(x)) <span class="cf">else</span> x</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>X <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(X)</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Train a causal forest</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>cf_model <span class="ot">&lt;-</span> <span class="fu">causal_forest</span>(X, Y, W, <span class="at">num.trees =</span> <span class="dv">2000</span>,<span class="at">seed =</span> <span class="dv">123</span>)  <span class="co"># using 2000 trees for stability</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Training the forest may take a little time (depending on your machine). Once it’s done, we can use the model to estimate individual treatment effects.</p>
+<p>Let’s get the CATE estimates for the training data itself:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Estimate CATE for each individual in the training set</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>cates <span class="ot">&lt;-</span> <span class="fu">predict</span>(cf_model)<span class="sc">$</span>predictions</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(cates)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(cates, <span class="dv">50</span>, <span class="at">main=</span><span class="st">"Distribution of CATE estimates from Causal Forest"</span>,</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab=</span><span class="st">"Estimated CATE (kg weight change due to quitting)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p><strong>How do you interpret the distribution of CATEs?</strong></p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-12-contents" aria-controls="callout-12" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Interpretation tip
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-12" class="callout-12-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>The <code>hist</code> will show the distribution of those CATE estimates. For example, you find that most estimated effects are positive (suggesting quitting causes weight gain for most people), but with some variation in magnitude. The CATEs range from, say, 1 kg to 7 kg for different individuals. If any are negative (less than 0), that would suggest the model thinks a few individuals could <em>lose</em> weight or have very little gain when quitting (though that might be an artifact or noise if not expected in reality).</p>
+</div>
+</div>
+</div>
+<p>The average of the CATE estimates from the forest is another way to estimate the ATE. We can compare that to our earlier result.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(cates)  <span class="co"># average predicted treatment effect</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>In theory, <span class="math inline">\(\mathbb{E}[\hat{\tau}(X)]\)</span> from a well-trained causal forest should be close to the ATE. The forest has a method to directly compute an ATE with uncertainty using a double robust estimator:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>ate_forest <span class="ot">&lt;-</span> <span class="fu">average_treatment_effect</span>(cf_model)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>ate_forest</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The output of <code>average_treatment_effect</code> will give an estimate and a confidence interval for the ATE. We expect this to be in the ballpark of our linear model’s ATE (possibly within the CI).</p>
+<p>Now, the real advantage of the causal forest is exploring heterogeneity. We should check which variables are most important in determining the heterogeneity of the treatment effect.</p>
+<section id="variable-importance-in-the-causal-forest" class="level3">
+<h3 class="anchored" data-anchor-id="variable-importance-in-the-causal-forest">3.1 Variable Importance in the Causal Forest</h3>
+<p>We can use <code>variable_importance(cf_model)</code> to see which covariates the forest found most useful for splitting on heterogeneity. This returns a numeric importance score for each variable (higher means more important). Let’s retrieve and sort these:</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-13-contents" aria-controls="callout-13" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Code
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-13" class="callout-13-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="sourceCode" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Variable importance for treatment effect heterogeneity</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>vimp <span class="ot">&lt;-</span> <span class="fu">variable_importance</span>(cf_model)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(vimp) <span class="ot">&lt;-</span> <span class="fu">colnames</span>(X)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sort</span>(vimp, <span class="at">decreasing =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p><strong>Visualize these importance scores as a simple bar plot for clarity</strong></p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-14-contents" aria-controls="callout-14" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Code
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-14" class="callout-14-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="sourceCode" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Barplot of variable importance</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>sorted_vimp <span class="ot">&lt;-</span> <span class="fu">sort</span>(vimp)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="fu">barplot</span>(sorted_vimp, <span class="at">horiz=</span><span class="cn">TRUE</span>, <span class="at">las=</span><span class="dv">1</span>,</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>        <span class="at">main=</span><span class="st">"Variable Importance (Causal Forest)"</span>,</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">xlab=</span><span class="st">"Relative importance"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p>Interpreting the importance: Unlike a predictive random forest where importance indicates contribution to predicting Y, here it indicates contribution to treatment effect heterogeneity. For instance, if <code>smokeyrs</code> is among the top ones, it implies that the effect of quitting might differ for long time smokers versus other smokers (the forest found splitting on smoking years improved treatment effect estimates). If <code>sex</code> is low, the effect might not differ between men and women, etc. We should combine this with economic or scientific reasoning.</p>
+</section>
+<section id="checking-causal-forest-calibration-and-interpretation" class="level3">
+<h3 class="anchored" data-anchor-id="checking-causal-forest-calibration-and-interpretation">3.2 Checking Causal Forest Calibration and Interpretation</h3>
+<p>Before acting on the forest’s results, it’s good to check how well it fits the data. The <code>grf</code> package provides a calibration test via <code>test_calibration(cf_model)</code>. This function assesses whether the forest’s predictions are reliable, by testing if the forest’s predicted CATEs are consistent with the observed outcomes in held-out data.</p>
+<p><strong>Run the calibration test</strong></p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-15-contents" aria-controls="callout-15" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Code
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-15" class="callout-15-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="sourceCode" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>calib <span class="ot">&lt;-</span> <span class="fu">test_calibration</span>(cf_model)</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>calib</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p>This is effectively regressing the actual outcome differences on the forest’s predicted effects. The ideal result for a well-calibrated model is:</p>
+<ul>
+<li><code>mean.forest.prediction</code> coefficient ≈ 1 (meaning the overall ATE the forest predicts matches the truth),</li>
+<li><code>differential.forest.prediction</code> coefficient ≈ 1 (meaning the variations in CATE the forest predicts correspond to real variations).</li>
+</ul>
+<p>If <code>differential.forest.prediction</code> is significantly less than 1 or not significant, it might mean the forest’s heterogeneity might not be very reliable (perhaps the true effect is more homogeneous than the model suggests, or we might be overfitting heterogeneity). If it’s close to 1 and significant, that gives confidence that the forest captured genuine heterogeneity.</p>
+<p>Another diagnostic: We can use <code>best_linear_projection</code> to summarize how the CATE varies with covariates. This function will essentially run a regression of the forest’s predicted CATE on the covariates (with a doubly robust approach). It gives an interpretable linear approximation to the heterogeneity.</p>
+<p>**Try <code>best_linear_projection</code> on the forest.* * ::: {.callout-tip collapse=“true”} ### Code</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>blp <span class="ot">&lt;-</span> <span class="fu">best_linear_projection</span>(cf_model, <span class="at">A =</span> X)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>blp</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The result will list coefficients for each covariate in <code>X</code> (like age, sex, etc.) indicating how the treatment effect correlates with those covariates. For example, if the <code>sex</code> coefficient in the BLP is 1.5, it might suggest that (all else equal) the effect for, say, males vs females differs by 1.5 kg. If <code>smokeintensity</code> has a positive coefficient, it suggests higher baseline intensity leads to larger weight gain upon quitting, etc. Essentially, <code>best_linear_projection</code> is giving a simpler linear story of the heterogeneity that the forest found.</p>
+<p><strong>Important:</strong> These coefficients <strong>are not the same as a direct regression on the outcome</strong>; they specifically target the treatment effect. A variable could have no association with outcome directly but still predict heterogeneity of the effect. :::</p>
+<p>At this point, we have:</p>
+<ul>
+<li>An overall ATE from the forest (<code>ate_forest</code>),</li>
+<li>A sense of which features drive heterogeneity (<code>variable_importance</code> and <code>best_linear_projection</code>),</li>
+<li>Some diagnostics on whether our heterogeneity findings are reliable (<code>test_calibration</code>).</li>
+</ul>
+<p>We might conclude from these that, for example, the effect of quitting is positive for nearly everyone, but it tends to be larger for heavy smokers and perhaps slightly larger for younger individuals (if that’s what your model found). This kind of insight tells us <em>who</em> is most affected by the treatment.</p>
+<p>Next, let’s use these insights to inform a treatment policy.</p>
+</section>
+</section>
+<section id="learning-an-optimal-treatment-assignment-policy" class="level2">
+<h2 class="anchored" data-anchor-id="learning-an-optimal-treatment-assignment-policy">4. Learning an Optimal Treatment Assignment Policy</h2>
+<p>Finally, we’ll explore how to go from estimated CATEs to a treatment policy. A treatment policy is a rule that decides which individuals should get the treatment (in this case, be encouraged to quit smoking) versus not, based on their covariates, with the aim of maximizing some outcome metric (here, perhaps minimizing weight gain).</p>
+<p>In a real health context, recommending someone <em>not</em> quit smoking to avoid weight gain would be unethical since smoking has many other harms. For the sake of this exercise, however, we treat it as a theoretical exercise in policy learning, imagine weight change is the primary outcome of interest for some reason. The <code>policytree</code> package finds a decision tree that maximizes expected welfare (outcome) by assigning treatment to those for whom it is most beneficial. In our scenario, if we treat weight gain as a “bad” outcome, we might want to assign the “quit smoking” treatment to those who would gain the least weight (or even lose weight) from quitting, and perhaps not assign it to those who would gain a lot of weight. However, to use the tool straightforwardly, we’ll assume we want to maximize weight (just as an illustration of the technique).</p>
+<p>The procedure:</p>
+<ul>
+<li>We obtain doubly robust scores for each individual, which represent outcome predictions under treated and control for use in policy learning.</li>
+<li>Feed these into <code>policy_tree</code> which will produce an optimal tree of a given depth.</li>
+</ul>
+<p>The <code>double_robust_scores()</code> function from <code>policytree</code> can take our causal forest and produce a matrix of estimated outcome if treated vs if control for each unit. Each row gives something like (<code>control</code>, <code>treated</code>) for that individual, estimated in a robust way. The policy learning then figures out, for a given complexity (max tree depth), which splits yield the best assignment.</p>
+<p>Let’s do this for a simple policy tree of depth 2 (a tree with 2 splits, thus up to 4 leaves). Depth 2 is a reasonable complexity for an easy interpretation.</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute doubly robust score estimates from the causal forest</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>dr_scores <span class="ot">&lt;-</span> <span class="fu">double_robust_scores</span>(cf_model)  <span class="co"># matrix with columns "control" and "treated"</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>flipped_scores <span class="ot">&lt;-</span> <span class="sc">-</span>dr_scores  <span class="co"># flips both treated and control outcomes</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Learn an optimal policy tree of depth 2</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>policy <span class="ot">&lt;-</span> <span class="fu">policy_tree</span>(<span class="at">X =</span> <span class="fu">as.matrix</span>(X),                     <span class="co"># features (must be matrix)</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>                      <span class="at">Gamma =</span> flipped_scores,                   <span class="co"># doubly robust scores</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>                      <span class="at">depth =</span> <span class="dv">2</span>)</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>policy</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(policy)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The printed output of <code>policy</code> will describe the tree structure.</p>
+<ul>
+<li>“Actions: 1: control 2: treated” means by convention, <em>Action 1</em> = do not give treatment (i.e., do not encourage quitting), <em>Action 2</em> = give treatment (encourage quitting).</li>
+</ul>
+<p>The policy tree has found a simple rule that segments people by some key variables and assigns the “quit” intervention where it expects better outcomes (i.e., less weight gain). For example, the hypothetical policy above would mean: among active people, those with shorter smoking histories are safer to treat (less risk of weight gain). But if they smoked for many years, even though active, the model predicts more weight gain after quitting, so avoids recommending it. Similarly among inactive individuals, quitting is only recommended for the elderly (perhaps because weight gain is less of a concern or less likely at older ages).</p>
+<p>Again, I emphasize this is a purely data-driven illustration. In reality, one would include a more comprehensive utility (quitting has huge health benefits beyond weight). But as a learning tool, the <code>policy_tree</code> shows how using causal estimates we can derive personalized decision rules.</p>
+</section>
+<section id="conclusion" class="level2">
+<h2 class="anchored" data-anchor-id="conclusion">5. Conclusion</h2>
+<p>In this lab, we walked through a complete example of causal inference analysis:</p>
+<ul>
+<li>Data identification: We identified the treatment (<code>qsmk</code>), outcome (<code>wt82_71</code>), and key covariates (age, sex, education, smoking intensity, etc.) in the NHEFS dataset.</li>
+<li>ATE via G-computation: We fit a linear model to estimate the average effect of smoking cessation on weight gain, finding that quitting smoking is associated with a significant increase in weight (on the order of a few kilograms) after adjusting for confounders.</li>
+<li>Causal Forest for CATEs: We used a causal forest to uncover heterogeneity in the treatment effect. This allowed us to see that certain factors (e.g., baseline smoking intensity, sex, etc.) influence how much weight individuals gain from quitting. We evaluated the forest using built-in diagnostics: checking the overall ATE (which was consistent with the regression), identifying important variables driving heterogeneity, and using calibration tests to ensure the forest wasn’t overfitting.</li>
+<li>Policy Learning: We leveraged the CATE estimates to derive an optimal treatment policy using a shallow decision tree. This policy provides an interpretable decision rule for assigning the treatment in a way that maximizes the expected outcome. We interpreted the policy tree and calculated its expected outcome, solidifying the link between causal insights and decision-making.</li>
+</ul>
+<p>Throughout, we focused on practical implementation in base R, giving you experience with the code and output interpretation at each step. You can extend this analysis in various ways:</p>
+<ul>
+<li>Try different model specifications or additional covariates in the outcome regression.</li>
+<li>Increase the depth of the policy tree or try a different approach (but note deeper trees can become complex to interpret).</li>
+<li>Validate the causal forest by splitting the data or using out-of-sample tests.</li>
+<li>If interested in the theory, consider why each step requires certain assumptions (unconfoundedness, model correctness, etc.), and what the diagnostics are telling us.</li>
+</ul>
+<p>We hope this lab has given you a clearer understanding of how to do causal inference in R, bridging the gap between conceptual formulas and real-world data analysis. The skills practiced here – regression adjustment, using causal machine learning models, and policy derivation, are powerful tools in a researcher’s arsenal for investigating causal questions in observational data.</p>
+</section>
+<section id="do-more" class="level1">
+<h1>Do more!</h1>
+<p><code>causaldata</code> package has a lot of datasets which can used for causal analysis. How about if you take one and repeat the lab?!</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/PayamEmami\.github\.io\/causal_forest\/");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

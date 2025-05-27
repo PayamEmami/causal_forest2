@@ -1,0 +1,296 @@
+[
+  {
+    "objectID": "cf.html#agenda",
+    "href": "cf.html#agenda",
+    "title": "Machine Learning for Heterogeneous Treatment Effect",
+    "section": "Agenda",
+    "text": "Agenda\n\nWhy Causal Inference? – Prediction vs. Causation\n\nPotential Outcomes – ATE, CATE, ITE\n\nClassical vs ML Approaches\n\nCausal Forests – Honest trees, CATE\n\nPolicy Learning – policytree, treatment rules\n\nLab"
+  },
+  {
+    "objectID": "cf.html#what-is-prediction",
+    "href": "cf.html#what-is-prediction",
+    "title": "Machine Learning for Heterogeneous Treatment Effect",
+    "section": "What Is Prediction?",
+    "text": "What Is Prediction?\n\nPredicts what will happen given patterns in the data\nUses statistical associations\nGreat for:\n\nRisk scoring\nRecommendation systems\nForecasting"
+  },
+  {
+    "objectID": "cf.html#example-if-you-are-a-smoker-your-risk-of-lung-cancer-is-high.",
+    "href": "cf.html#example-if-you-are-a-smoker-your-risk-of-lung-cancer-is-high.",
+    "title": "Machine Learning for Heterogeneous Treatment Effect",
+    "section": "Example: “If you are a smoker, your risk of lung cancer is high.”",
+    "text": "Example: “If you are a smoker, your risk of lung cancer is high.”\n\n# Logistic regression for cancer prediction\nmodel &lt;- glm(cancer ~ smoker,\n             data = health_data,\n             family = binomial)\n\n# Predict risk for a new patient\nnew_patient &lt;- data.frame(smoker = 1, age = 55, gender = \"M\")\npredict(model, newdata = new_patient, type = \"response\")\nThis is a predictive model using logistic regression\nIt learns associations in the data\nIt might correctly predict that smokers have higher cancer risk"
+  },
+  {
+    "objectID": "cf.html#correlation-is-causation",
+    "href": "cf.html#correlation-is-causation",
+    "title": "Machine Learning for Heterogeneous Treatment Effect",
+    "section": "Correlation Is Causation",
+    "text": "Correlation Is Causation\n\n\n# Adjusted model with potential confounders\nmodel &lt;- glm(cancer ~ smoker + age + gender + occupation,\n             data = health_data,\n             family = binomial)\n\n# Predict adjusted risk\npredict(model, newdata = new_patient, type = \"response\")Correlation can be causal only and only if:\nWe adjust for all confounders (e.g., age, gender, occupation)\nThere’s no unmeasured confounding\nThe model is correctly specified (no omitted variables, nonlinearity, etc.)\nThere’s overlap (every person could, in theory, be treated or not)\nThis is the assumption of “unconfoundedness” or “ignorability” Under these conditions, correlation ≈ causal effect"
+  },
+  {
+    "objectID": "cf.html#what-is-causation",
+    "href": "cf.html#what-is-causation",
+    "title": "Machine Learning for Heterogeneous Treatment Effect",
+    "section": "What Is Causation?",
+    "text": "What Is Causation?\n\nWhat would happen if we changed something?\nRequires counterfactual thinking\nHelps design treatments, policies, and interventions\n\nExample: “If we force someone to stop smoking, does their cancer risk drop?”\nThis is about changing the world, not just observing it."
+  },
+  {
+    "objectID": "cf.html#the-fundamental-problem-of-causal-inference",
+    "href": "cf.html#the-fundamental-problem-of-causal-inference",
+    "title": "Machine Learning for Heterogeneous Treatment Effect",
+    "section": "The Fundamental Problem of Causal Inference",
+    "text": "The Fundamental Problem of Causal Inference\n\nWe want to know:\nWhat would have happened if this person had NOT received the treatment?But…\nWe only observe one world:\nEither \\(Y(1)\\) (if treated) or \\(Y(0)\\) (if not treated)\n\nWe never observe both for the same individual\nThis is the fundamental challenge in causal inference:We must estimate the missing counterfactual"
+  },
+  {
+    "objectID": "cf.html#potential-outcomes",
+    "href": "cf.html#potential-outcomes",
+    "title": "Machine Learning for Heterogeneous Treatment Effect",
+    "section": "Potential Outcomes",
+    "text": "Potential Outcomes\n\nFor each person, define:\n\\(Y(1)\\): Outcome if treated\n\\(Y(0)\\): Outcome if not treated\nWe want to estimate quantities like:\nIndividual Treatment Effect (ITE):\n\\(\\tau_i = Y_i(1) - Y_i(0)\\)\nAverage Treatment Effect (ATE):\n\\(\\mathbb{E}[Y(1) - Y(0)]\\)\nConditional Average Treatment Effect (CATE):\n\\(\\mathbb{E}[Y(1) - Y(0) \\mid X = x]\\)"
+  },
+  {
+    "objectID": "cf.html#classical-causal-estimation-methods",
+    "href": "cf.html#classical-causal-estimation-methods",
+    "title": "Machine Learning for Heterogeneous Treatment Effect",
+    "section": "Classical Causal Estimation Methods",
+    "text": "Classical Causal Estimation Methods\n\n\n\n\n\n\n\n\n\nMethod\nKey Idea\nNotes\n\n\n\n\nG-computation\nModel \\(Y\\) given \\(W\\) and \\(X\\)\nRegression-based; plug-in potential outcomes\n\n\nMatching\nCompare treated and control with similar \\(X\\)\nPropensity score or distance-based\n\n\nIPW\nWeight by inverse treatment probability\nStabilized weights often needed\n\n\nAIPW\nCombine outcome + treatment models\nDoubly robust estimator\n\n\nThese methods all estimate the Average Treatment Effect (ATE)"
+  },
+  {
+    "objectID": "cf.html#example-smoking-and-birthweight",
+    "href": "cf.html#example-smoking-and-birthweight",
+    "title": "Machine Learning for Heterogeneous Treatment Effect",
+    "section": "Example: Smoking and Birthweight",
+    "text": "Example: Smoking and Birthweight\nWe’ll study the effect of maternal smoking on infant birthweight\nusing the real-world dataset MASS::birthwt.\n\nbwt: infant birthweight (in grams)\nsmoke: whether the mother smoked (1 = yes, 0 = no)\nage: mother’s age\n\n# Load the dataset\ndata &lt;- MASS::birthwt\n\n# View first few rows\nhead(data[, c(\"bwt\", \"smoke\", \"age\")])"
+  },
+  {
+    "objectID": "cf.html#example-smoking-and-birthweight-1",
+    "href": "cf.html#example-smoking-and-birthweight-1",
+    "title": "Machine Learning for Heterogeneous Treatment Effect",
+    "section": "Example: Smoking and Birthweight",
+    "text": "Example: Smoking and Birthweight"
+  },
+  {
+    "objectID": "cf.html#g-computation",
+    "href": "cf.html#g-computation",
+    "title": "Machine Learning for Heterogeneous Treatment Effect",
+    "section": "G-computation",
+    "text": "G-computation\n\nTo estimate the causal effect of smoking on birthweight, we need to create counterfactual outcomes.For each mother, we simulate:\n\\(Y_i(1)\\): Birthweight if she had smoked\n\\(Y_i(0)\\): Birthweight if she had not smoked\nEven though each mother only did one of these in reality, we can estimate both by:\nFitting a model: bwt ~ smoke + age\nUsing that model to predict outcomes under:\n\nsmoke = 1 (everyone smokes)\nsmoke = 0 (no one smokes)\n\nThis gives us a pair of outcomes for each mother: - One observed - One predicted (counterfactual)Then: Average difference = Estimated ATE"
+  },
+  {
+    "objectID": "cf.html#g-computation-1",
+    "href": "cf.html#g-computation-1",
+    "title": "Machine Learning for Heterogeneous Treatment Effect",
+    "section": "G-computation",
+    "text": "G-computation\n# Load and prepare data\ndata &lt;- MASS::birthwt\ndata$smoke &lt;- factor(data$smoke, labels = c(\"Non-smoker\", \"Smoker\"))\n\n# Fit outcome model\nmodel &lt;- lm(bwt ~ smoke + age, data = data)\n\n# Predict outcomes under both smoking conditions\nnewdata_smoke1 &lt;- data\nnewdata_smoke1$smoke &lt;- \"Smoker\"\npred_smoke1 &lt;- predict(model, newdata = newdata_smoke1)\n\nnewdata_smoke0 &lt;- data\nnewdata_smoke0$smoke &lt;- \"Non-smoker\"\npred_smoke0 &lt;- predict(model, newdata = newdata_smoke0)"
+  },
+  {
+    "objectID": "cf.html#g-computation-2",
+    "href": "cf.html#g-computation-2",
+    "title": "Machine Learning for Heterogeneous Treatment Effect",
+    "section": "G-computation",
+    "text": "G-computation"
+  },
+  {
+    "objectID": "cf.html#average-treatment-effect-ate",
+    "href": "cf.html#average-treatment-effect-ate",
+    "title": "Machine Learning for Heterogeneous Treatment Effect",
+    "section": "Average Treatment Effect (ATE)",
+    "text": "Average Treatment Effect (ATE)\nThe ATE is the average difference in outcomes\nif everyone received treatment versus\nif no one received treatment:\n\\[\n\\text{ATE} = \\mathbb{E}[Y(1) - Y(0)]\n\\]\nUsing G-computation, we estimated:\n\nFor each person:\n\n\\(Y(1)\\) = predicted birthweight if smoked\n\\(Y(0)\\) = predicted birthweight if not smoked\n\nThen averaged the difference:\n\n\n mean(pred_smoke0 - pred_smoke1)\n\n[1] 278.3561"
+  },
+  {
+    "objectID": "cf.html#estimating-ate-using-a-marginaleffects",
+    "href": "cf.html#estimating-ate-using-a-marginaleffects",
+    "title": "Machine Learning for Heterogeneous Treatment Effect",
+    "section": "Estimating ATE Using a marginaleffects",
+    "text": "Estimating ATE Using a marginaleffects\nHere’s an example using the marginaleffects package:\n\n# Install if needed\nlibrary(marginaleffects)\n\n# Fit the outcome model\nmodel &lt;- lm(bwt ~ smoke + age, data = data)\n\n# Estimate marginal (average treatment) effects\navg_effect &lt;- avg_comparisons(model, variables = \"smoke\")\navg_effect\n\n\n Estimate Std. Error    z Pr(&gt;|z|)   S 2.5 % 97.5 %\n     -278        107 -2.6  0.00927 6.8  -488  -68.7\n\nTerm: smoke\nType: response\nComparison: Smoker - Non-smoker"
+  },
+  {
+    "objectID": "cf.html#causal-inference-the-big-picture",
+    "href": "cf.html#causal-inference-the-big-picture",
+    "title": "Machine Learning for Heterogeneous Treatment Effect",
+    "section": "Causal Inference: The Big Picture",
+    "text": "Causal Inference: The Big Picture\n\nWe want to answer: “What would happen to the outcome if we changed the treatment?”We have:\nObserved data: Treatment \\(W\\), Outcome \\(Y\\), Covariates \\(X\\)\nGoal: Estimate \\(\\mathbb{E}[Y(1) - Y(0)]\\) or \\(\\mathbb{E}[Y(1) - Y(0) \\mid X]\\)\nCore Assumptions\nConsistency\nEach person’s outcome corresponds to their actual treatment\nUnconfoundedness (a.k.a. ignorability)\nNo unmeasured confounders:\n\\[ Y(1), Y(0) \\perp\\!\\!\\!\\perp W \\mid X \\]\nPositivity (Overlap)\nEveryone has a chance to receive either treatment:\n\\[ 0 &lt; P(W = 1 \\mid X) &lt; 1 \\]"
+  },
+  {
+    "objectID": "cf.html#heterogeneous-treatment-effects",
+    "href": "cf.html#heterogeneous-treatment-effects",
+    "title": "Machine Learning for Heterogeneous Treatment Effect",
+    "section": "Heterogeneous Treatment Effects",
+    "text": "Heterogeneous Treatment Effects\n\nNot everyone responds to a treatment in the same way."
+  },
+  {
+    "objectID": "cf.html#heterogeneous-treatment-effects-1",
+    "href": "cf.html#heterogeneous-treatment-effects-1",
+    "title": "Machine Learning for Heterogeneous Treatment Effect",
+    "section": "Heterogeneous Treatment Effects",
+    "text": "Heterogeneous Treatment Effects\n\nNot everyone responds to a treatment in the same way.\ndata$age_group &lt;- cut(data$age,\n                      breaks = c(0, 20, 25, 30, 40),\n                      labels = c(\"&lt;20\", \"21–25\", \"26–30\", \"&gt;30\"))\n\n# Fit model with interaction\nmodel &lt;- lm(bwt ~ smoke * age_group, data = data)\navg_comparisons(model, variables = \"smoke\",by = \"age_group\")\n\n\n age_group Estimate Std. Error      z Pr(&gt;|z|)   S 2.5 % 97.5 %\n     &lt;20      -80.2        171 -0.469   0.6394 0.6  -416  255.4\n     21–25   -328.5        189 -1.733   0.0830 3.6  -700   42.9\n     26–30   -324.7        244 -1.329   0.1840 2.4  -804  154.3\n     &gt;30     -762.6        329 -2.320   0.0203 5.6 -1407 -118.3\n\nTerm: smoke\nType: response\nComparison: Smoker - Non-smoker\n\nThese individual-level effects are called:\\[\n\\text{CATE}(x) = \\mathbb{E}[Y(1) - Y(0) \\mid X = x]\n\\]Where \\(X\\) is a person’s characteristics (like age, health, etc.)"
+  },
+  {
+    "objectID": "cf.html#the-problem-with-linear-models-for-cate",
+    "href": "cf.html#the-problem-with-linear-models-for-cate",
+    "title": "Machine Learning for Heterogeneous Treatment Effect",
+    "section": "The Problem with Linear Models for CATE",
+    "text": "The Problem with Linear Models for CATE\n\nSo far, we’ve tried to estimate CATE using:\nG-computation (linear regression)\nInteraction terms (e.g. smoke * age_group)\nBut…\n\n\n\n\nWe must specify the functional form of interactions\n(linear? quadratic? thresholds?)\nWe need to manually choose effect modifiers (e.g. age, race, BMI)\nInteraction terms grow fast and messy with multiple covariates\nCan’t easily model nonlinear or complex treatment effects\nNot flexible enough for high-dimensional or omics data\n\n\n\n\n\nWe need a method that:\nAutomatically captures heterogeneous effects\nAdapts to complex, nonlinear interactions\nProvides individual-level treatment estimates"
+  },
+  {
+    "objectID": "cf.html#causal-forests",
+    "href": "cf.html#causal-forests",
+    "title": "Machine Learning for Heterogeneous Treatment Effect",
+    "section": "Causal Forests",
+    "text": "Causal Forests\n\nA Causal Forest is a machine learning method\nfor estimating Conditional Average Treatment Effects (CATE).Built on Random Forests, but different:\n\n\n\n\n\n\n\nFeature\nRandom Forest\nCausal Forest\n\n\n\n\nGoal\nPredict outcome \\(Y\\)\nEstimate treatment effect \\(\\tau(x)\\)\n\n\nSplits optimize\nPrediction accuracy\nDifference in treatment effect\n\n\nOutput\n\\(\\hat{Y}\\)\n\\(\\widehat{\\tau}(x)\\)\n\n\n\nLearn how the treatment effect varies across people\nAutomatically find subgroups with different effects\nEstimate CATE(x) without manually specifying interactions\nWork with many variables and complex relationships\nCausal forests solve the exact problem we saw with linear models —\nthey let us estimate individualized causal effects flexibly and nonparametrically."
+  },
+  {
+    "objectID": "cf.html#how-does-a-causal-forest-work",
+    "href": "cf.html#how-does-a-causal-forest-work",
+    "title": "Machine Learning for Heterogeneous Treatment Effect",
+    "section": "How Does a Causal Forest Work?",
+    "text": "How Does a Causal Forest Work?\n\nCausal forests estimate how treatment effects vary with covariates.Instead of predicting outcomes, we predict treatment effects:\\[\n\\tau(x) = \\mathbb{E}[Y(1) - Y(0) \\mid X = x]\n\\]Each tree in the forest:\nFinds splits that maximize differences in treatment effects\nCompares outcomes between treated and control within each leaf\nAverages those differences across many randomized trees\nResult: An estimate of \\(\\widehat{\\tau}(x)\\) for each individual"
+  },
+  {
+    "objectID": "cf.html#how-do-causal-trees-decide-where-to-split",
+    "href": "cf.html#how-do-causal-trees-decide-where-to-split",
+    "title": "Machine Learning for Heterogeneous Treatment Effect",
+    "section": "How Do Causal Trees Decide Where to Split?",
+    "text": "How Do Causal Trees Decide Where to Split?\n\nIn Causal Trees, we want to split nodes to maximize treatment effect heterogeneityThe objective is:\\[\nn_L \\cdot n_R \\cdot ( \\hat{\\tau}_L - \\hat{\\tau}_R )^{2},\n\\] \\[\n\\tau(x):=\\operatorname{lm}\\left(Y_i-\\hat{m}\\left(X_i\\right) \\sim W_i-\\hat{e}\\left(X_i\\right), \\text { weights }={\\alpha_i(x)}\\right),\n\\]This creates honest, stable trees that split only if the treatment effect is different, not just the outcome."
+  },
+  {
+    "objectID": "cf.html#applying-a-causal-forest-in-r",
+    "href": "cf.html#applying-a-causal-forest-in-r",
+    "title": "Machine Learning for Heterogeneous Treatment Effect",
+    "section": "Applying a Causal Forest in R",
+    "text": "Applying a Causal Forest in R\n\nWe use the grf package to estimate how maternal smoking\naffects infant birthweight, and how this effect varies across subgroups.\nlibrary(grf)\n\n# Prepare the data\ndata_cf &lt;- as.data.frame(data[, c(\"age_group\", \"bwt\", \"ptl\", \"ht\", \"ui\", \"ftv\", \"lwt\", \"smoke\")])\ndata_cf$age_group &lt;- as.numeric(data_cf$age_group)  # Treat age_group as numeric\n\n# Covariates (X): all except outcome and treatment\nX &lt;- data_cf[, !colnames(data_cf) %in% c(\"bwt\", \"smoke\")]\nY &lt;- data_cf$bwt\nW &lt;- ifelse(data_cf$smoke==\"Smoker\",1,0)\n# Fit the causal forest\ncf &lt;- causal_forest(X = X, Y = Y, W =W, seed = 123)\n\n# Summary\nprint(cf)\n\nGRF forest object of type causal_forest \nNumber of trees: 2000 \nNumber of training samples: 189 \nVariable importance: \n    1     2     3     4     5     6 \n0.257 0.006 0.000 0.006 0.187 0.501"
+  },
+  {
+    "objectID": "cf.html#applying-a-causal-forest-in-r-1",
+    "href": "cf.html#applying-a-causal-forest-in-r-1",
+    "title": "Machine Learning for Heterogeneous Treatment Effect",
+    "section": "Applying a Causal Forest in R",
+    "text": "Applying a Causal Forest in R\n\nWe can have a look of distribution of CATEs and also an average ATE\nhist(cf$predictions)\n\n\n\n\n\n\n\n\naverage_treatment_effect(cf)\n\n estimate   std.err \n-215.2066  103.7123"
+  },
+  {
+    "objectID": "cf.html#understanding-heterogeneous-effects-what-drives-variation",
+    "href": "cf.html#understanding-heterogeneous-effects-what-drives-variation",
+    "title": "Machine Learning for Heterogeneous Treatment Effect",
+    "section": "Understanding Heterogeneous Effects: What Drives Variation?",
+    "text": "Understanding Heterogeneous Effects: What Drives Variation?\n\nAfter fitting a causal forest, we can ask two key questions:\nWhich variables drive variation in the treatment effect?\nHow do they influence it?\nvariable_importance() for causal forests uses a special version of Breiman’s importance measure, adapted for HTE:\n\n\n[1] \"lwt\"       \"age_group\" \"ftv\"      \n\nThis tells us which variables are most often used to split the forest\nbased on treatment effect heterogeneity, not just outcome prediction."
+  },
+  {
+    "objectID": "cf.html#best-linear-projection-of-treatment-effects",
+    "href": "cf.html#best-linear-projection-of-treatment-effects",
+    "title": "Machine Learning for Heterogeneous Treatment Effect",
+    "section": "2. Best Linear Projection of Treatment Effects",
+    "text": "2. Best Linear Projection of Treatment Effects\n\n\nblp &lt;- best_linear_projection(cf,X[ranked.vars[1:3]])\nblp\n\n\nBest linear projection of the conditional average treatment effect.\nConfidence intervals are cluster- and heteroskedasticity-robust (HC3):\n\n             Estimate Std. Error t value Pr(&gt;|t|)\n(Intercept)  594.4161   521.1505  1.1406   0.2555\nlwt           -3.4022     3.9972 -0.8511   0.3958\nage_group   -192.1580   122.0143 -1.5749   0.1170\nftv           44.4866   111.3332  0.3996   0.6899\n\nThis fits a linear model: \\[\n\\hat{\\tau}(x) \\approx \\beta_0 + \\beta_1 X_1 + \\beta_2 X_2 + \\dots\n\\]Letting us quantify how each covariate influences the estimated CATE.\nPositive β → covariate increases the effect of treatment\nNegative β → covariate decreases the effect (e.g., makes smoking more harmful)"
+  },
+  {
+    "objectID": "cf.html#validating-a-causal-forest",
+    "href": "cf.html#validating-a-causal-forest",
+    "title": "Machine Learning for Heterogeneous Treatment Effect",
+    "section": "Validating a Causal Forest",
+    "text": "Validating a Causal Forest\n\n\n\nIn causal inference, we cannot observe true treatment effects for individuals.\nStandard prediction error metrics don’t apply.\nWe instead evaluate the model’s ability to rank individuals by treatment benefit.\n\nEvaluation Metrics\n\nTOC(q) (Targeting Operator Characteristic):\nMeasures the gain from treating the top \\(q\\%\\) individuals ranked by predicted CATE:\n\\[\n\\text{TOC}(q) = \\text{ATE}_{\\text{top } q\\%} - \\text{ATE}_{\\text{all}}\n\\]\nRATE (AUTOC):\nThe area under the TOC curve, summarizing ranking performance across all \\(\\in (0,1]\\)\n\n\nset.seed(123)\n\n# Split data into training and evaluation sets\nn &lt;- nrow(X)\ntrain_idx &lt;- sample(1:n, n / 2)\neval_idx &lt;- setdiff(1:n, train_idx)\n\n# Train causal forest on training data\ntrain.forest &lt;- causal_forest(X[train_idx, ], Y[train_idx], W[train_idx])\n\n# Predict CATEs on evaluation data\ntau.hat.eval &lt;- predict(train.forest, X[eval_idx, ])$predictions\n\n# Fit evaluation forest (for DR score computation)\neval.forest &lt;- causal_forest(X[eval_idx, ], Y[eval_idx], W[eval_idx])\n\n# Compute RATE and TOC\nrate.cate &lt;- rank_average_treatment_effect(eval.forest, priorities = tau.hat.eval)\n\n# Plot TOC curve =  plot(rate.cate, main = \"TOC Curve: Prioritization by CATE\")"
+  },
+  {
+    "objectID": "cf.html#evaluate-how-prioritization-works",
+    "href": "cf.html#evaluate-how-prioritization-works",
+    "title": "Machine Learning for Heterogeneous Treatment Effect",
+    "section": "Evaluate How Prioritization Works",
+    "text": "Evaluate How Prioritization Works\n\n\nTOC can be used to evaluate any prioritization rule, not just model-based ones.\nInstead of using predicted CATEs, we can rank individuals by:\n\nAge\nBMI\nClinical risk score\nOr even a policy rule like “treat all patients under 30”\n\nThis tells us: How good is this variable at identifying who benefits most?\n\nplot(rank_average_treatment_effect(cf, priorities = data[,c(\"age\",\"bwt\")]))"
+  },
+  {
+    "objectID": "cf.html#validating-the-causal-forest-calibration-test",
+    "href": "cf.html#validating-the-causal-forest-calibration-test",
+    "title": "Machine Learning for Heterogeneous Treatment Effect",
+    "section": "Validating the Causal Forest: Calibration Test",
+    "text": "Validating the Causal Forest: Calibration Test\n\nAfter fitting the causal forest, we want to know: Are the estimated individual treatment effects (CATEs) reasonable and reliable?We use the test_calibration():\ncal &lt;- test_calibration(cf)\nprint(cal)\n\n\nBest linear fit using forest predictions (on held-out data)\nas well as the mean forest prediction as regressors, along\nwith one-sided heteroskedasticity-robust (HC3) SEs:\n\n                               Estimate Std. Error t value  Pr(&gt;t)  \nmean.forest.prediction          0.96145    0.48232  1.9934 0.02384 *\ndifferential.forest.prediction -0.99698    1.13760 -0.8764 0.80903  \n---\nSignif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\nThis tests the model:\\[\nY_i \\approx \\mu(X_i) + (2W_i - 1) \\cdot \\hat{\\tau}(X_i)\n\\]A coefficient of 1 for ‘mean.forest.prediction’ suggests that the mean forest prediction is correct, whereas a coefficient of 1 for ‘differential.forest.prediction’ additionally suggests that the heterogeneity estimates from the forest are well calibrated. The p-value of the ‘differential.forest.prediction’ coefficient also acts as an omnibus test for the presence of heterogeneity: If the coefficient is significantly greater than 0, then we can reject the null of no heterogeneity."
+  },
+  {
+    "objectID": "cf.html#decision-rules",
+    "href": "cf.html#decision-rules",
+    "title": "Machine Learning for Heterogeneous Treatment Effect",
+    "section": "Decision Rules",
+    "text": "Decision Rules\n\nNow that we’ve learned how to estimate individual treatment effects using causal forests:What can we do with that information?. . .Goal: Personalized Decision-MakingInstead of applying one rule to everyone, we want to learn:“Who should get the treatment and who should not?”This is called a treatment policy:\\[\n\\pi(x) \\in \\{0, 1\\}\n\\]\n\\(\\pi(x) = 1\\) → assign treatment\n\\(\\pi(x) = 0\\) → assign control (no treatment)\nWe want a simple, interpretable rule to make this decision."
+  },
+  {
+    "objectID": "cf.html#learning-optimal-treatment-policies-with-policytree",
+    "href": "cf.html#learning-optimal-treatment-policies-with-policytree",
+    "title": "Machine Learning for Heterogeneous Treatment Effect",
+    "section": "Learning Optimal Treatment Policies with policytree",
+    "text": "Learning Optimal Treatment Policies with policytree\n\nThe policytree package learns a shallow decision tree that tells us:“Based on their profile, should this person receive the treatment?”What We Provide:\nCovariates \\(X\\)\nReward scores: doubly robust scores (Γ̂), which quantify how beneficial treatment is\nWe create a reward matrix for each person:cost &lt;- ate[[\"estimate\"]] \ndr.scores&lt;-get_scores(cf)\ndr.rewards &lt;- cbind(control = -dr.scores,\n                    treat = dr.scores - cost)\nReward if not treated: \\(-\\hat{\\tau}_i\\)\nReward if treated: \\(\\hat{\\tau}_i - \\text{cost}\\)\nThen we fit:library(policytree)\ntree &lt;- policy_tree(X, dr.rewards, depth = 2)\nplot(tree)The output is a clear, interpretable tree that assigns treatment based on maximizing expected benefit"
+  },
+  {
+    "objectID": "cf.html#learning-optimal-treatment-policies-with-policytree-1",
+    "href": "cf.html#learning-optimal-treatment-policies-with-policytree-1",
+    "title": "Machine Learning for Heterogeneous Treatment Effect",
+    "section": "Learning Optimal Treatment Policies with policytree",
+    "text": "Learning Optimal Treatment Policies with policytree\n\n\nlibrary(policytree)\nate&lt;-average_treatment_effect(cf)\ncost &lt;- ate[[\"estimate\"]] \ndr.scores&lt;-get_scores(cf)\ndr.rewards &lt;- cbind(control = -dr.scores,\n                    treat = dr.scores - cost)\nnot.missing &lt;- which(complete.cases(X))\ntree &lt;- policy_tree(X[not.missing,], dr.rewards[not.missing,],depth = 2)\nplot(tree)"
+  },
+  {
+    "objectID": "cf.html#summary",
+    "href": "cf.html#summary",
+    "title": "Machine Learning for Heterogeneous Treatment Effect",
+    "section": "Summary",
+    "text": "Summary\n\nWhat happens if we intervene? (e.g., prevent someone from smoking — will birthweight improve?)What We Learned:\nPrediction vs. Causation:\nCorrelation ≠ Causation → we need counterfactual reasoning\nG-Computation:\nA simple way to estimate treatment effects using regression\nHeterogeneous Treatment Effects (HTE):\nPeople respond differently — CATE models let us capture this\nCausal Forests:\nA flexible machine learning method to estimate individual treatment effects\n(without specifying interactions manually)\nModel Validation:\n\naverage_treatment_effect(), test_calibration(), best_linear_projection()\nAssessed quality, stability, and interpretability of CATEs\n\nPolicy Learning with policytree:\nConverted treatment effects into actionable, interpretable decision rules\nusing doubly robust scores\nWe went from simple regression to personalized, interpretable treatment policies\nbased on data, not assumptions."
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Causal Inference Lab: Smoking Cessation and Weight Gain (NHEFS Data)",
+    "section": "",
+    "text": "In this lab, we will gain hands-on practice with causal inference methods using data from the National Health and Nutrition Examination Survey Epidemiologic Follow-Up Study (NHEFS).\nOur goal is to investigate the causal effect of smoking cessation on subsequent weight gain. Specifically, we’ll use the nhefs_complete dataset (from the causaldata R package), which has information on individuals’ smoking status and weight change over a 10-year period. The treatment of interest is whether a person quit smoking between 1971 (baseline) and 1982 (follow-up), recorded as qsmk (1 = quit, 0 = did not quit).\nThe outcome is the change in weight between 1971 and 1982, recorded as wt82_71 (in kilograms).\nWe might want to treat several baseline characteristics as covariates (potential confounders), for example: age, sex, education level, baseline smoking intensity, and physical activity measures (exercise and active). These might help us adjust for differences between those who quit and those who did not."
+  },
+  {
+    "objectID": "index.html#introduction",
+    "href": "index.html#introduction",
+    "title": "Causal Inference Lab: Smoking Cessation and Weight Gain (NHEFS Data)",
+    "section": "",
+    "text": "In this lab, we will gain hands-on practice with causal inference methods using data from the National Health and Nutrition Examination Survey Epidemiologic Follow-Up Study (NHEFS).\nOur goal is to investigate the causal effect of smoking cessation on subsequent weight gain. Specifically, we’ll use the nhefs_complete dataset (from the causaldata R package), which has information on individuals’ smoking status and weight change over a 10-year period. The treatment of interest is whether a person quit smoking between 1971 (baseline) and 1982 (follow-up), recorded as qsmk (1 = quit, 0 = did not quit).\nThe outcome is the change in weight between 1971 and 1982, recorded as wt82_71 (in kilograms).\nWe might want to treat several baseline characteristics as covariates (potential confounders), for example: age, sex, education level, baseline smoking intensity, and physical activity measures (exercise and active). These might help us adjust for differences between those who quit and those who did not."
+  },
+  {
+    "objectID": "index.html#lab-overview",
+    "href": "index.html#lab-overview",
+    "title": "Causal Inference Lab: Smoking Cessation and Weight Gain (NHEFS Data)",
+    "section": "Lab overview:",
+    "text": "Lab overview:\nWe will start by exploring the dataset and identifying the key variables (treatment, outcome, covariates).\nThen we will estimate the Average Treatment Effect (ATE) of quitting smoking on weight gain using G-computation with a linear regression model. Next, we will use a Causal Forest (from the grf package) to estimate Conditional Average Treatment Effects (CATEs) – i.e., how the effect might differ across individuals. We will evaluate the causal forest model using built-in diagnostics (such as average treatment effect estimation, variable importance, calibration tests, etc.).\nFinally, we will demonstrate how to derive an optimal treatment assignment policy using the policytree package. This policy will take the form of a simple decision tree that prescribes treatment (quitting or not) based on covariates, with the aim of maximizing the expected outcome under that policy.\nCode cells are provided and are foldable, meaning you can click to reveal the code and outputs. We encourage you to read the explanations, then write the code and derive the results yourself. The focus is on practical implementation rather than deep theory!\nLet’s get started by loading the data and examining its contents."
+  },
+  {
+    "objectID": "index.html#data-setup-and-exploration",
+    "href": "index.html#data-setup-and-exploration",
+    "title": "Causal Inference Lab: Smoking Cessation and Weight Gain (NHEFS Data)",
+    "section": "1. Data Setup and Exploration",
+    "text": "1. Data Setup and Exploration\nFirst, load the required packages and the nhefs_complete dataset. The causaldata package contains this dataset, and we will also load grf and policytree for later steps. Then we’ll inspect the dataset structure to confirm the variables present.\n\n# Load necessary packages (install them first if not already installed)\nlibrary(causaldata)    # Contains the NHEFS dataset\nlibrary(grf)           # For causal forests\nlibrary(policytree)    # For learning treatment policies\n\n# Load the NHEFS complete-case data\ndata(\"nhefs_complete\")\nnhefs &lt;- nhefs_complete   # rename for convenience\n\n# Quick overview of the dataset\ndim(nhefs)        # number of rows and columns\n\n[1] 1566   67\n\nnames(nhefs)[1:15]  # first 15 variable names for a glimpse\n\n [1] \"seqn\"      \"qsmk\"      \"death\"     \"yrdth\"     \"modth\"     \"dadth\"    \n [7] \"sbp\"       \"dbp\"       \"sex\"       \"age\"       \"race\"      \"income\"   \n[13] \"marital\"   \"school\"    \"education\"\n\n\nThe dim() output tells us the data has over 1500 observations and dozens of variables (the complete dataset has 67 columns).\nThere is also a data frame called nhefs_codebook that includes description for each of the columns of nhefs.\nTry to figure out our key variables\n\n\n\n\n\n\nThe key variables\n\n\n\n\n\nSome of the key variables we care about are:\n\nqsmk: Treatment indicator for quitting smoking (1 = quit between 1971 and 1982, 0 = did not quit).\nwt82_71: Outcome - weight change from 1971 to 1982 (in kg).\nCovariates such as:\n\nage: age in years (at baseline, 1971).\nsex: sex of the individual (likely coded as 0/1 for male/female).\neducation: highest completed years of education (baseline).\nsmokeintensity: number of cigarettes smoked per day at baseline.\nsmokeyrs: number of years the person has smoked (baseline).\nexercise: physical exercise (possibly 1 = yes if they exercise regularly, 0 = no).\nactive: physical activity level (e.g., an indicator of an active lifestyle or job).\nwt71: baseline weight in 1971 (in kg), and wt82: weight in 1982.\n\n\n\n\n\nConfirm some basic properties of these variables (types and summary statistics) and check the distribution of the treatment and outcome\n\n\n\n\n\n\nSolution\n\n\n\n\n\n# Ensure key variables are in the dataset and check their types\nstr(nhefs[, c(\"qsmk\", \"wt82_71\", \"age\", \"sex\", \"education\", \n              \"smokeintensity\", \"smokeyrs\", \"exercise\", \"active\", \"wt71\")])\n\n# How many people quit vs did not quit?\ntable(nhefs$qsmk)\n\n# Summary of the outcome overall and by treatment status\nsummary(nhefs$wt82_71)\ntapply(nhefs$wt82_71, nhefs$qsmk, summary)\n\n\n\nDo we have a relatively balanced data?\nHow do you interpret the summar?\n\n\n\n\n\n\nInterpretation tip\n\n\n\n\n\nFrom the table(qsmk) output, we see the dataset is imbalanced: a minority of the individuals quit smoking.\nThis reflects the observational nature: not everyone quits smoking over the decade. The outcome wt82_71 (weight change) can be positive (weight gain) or negative (weight loss). The summary by groups (tapply) shows that those who quit (qsmk=1) experienced higher weight gain on average than those who did not quit (qsmk=0). This is the raw difference in outcomes, which could be due to the effect of quitting but also could be confounded by other factors (e.g., perhaps quitters were different in age or other behaviors).\nIf we see, for instance, that the mean weight change for quitters is around +5 kg and for non-quitters is around +2 kg, the crude difference is ~3 kg. However, we should be cautious: this difference does not yet account for confounders. People who quit might systematically differ (e.g., maybe they were heavier or more health-conscious to begin with). We need causal inference methods to estimate the true causal effect of quitting.\n\n\n\nAt this stage, you might also explore other covariates e.g., use summary(nhefs$age) or table(nhefs$sex) to get a sense of the population. Are quitters on average older or younger? Male or female? You can stratify by treatment: tapply(nhefs$age, nhefs$qsmk, mean) to see differences\nFor a quick visualization, Compare the distribution of weight change for quitters vs non-quitters:\n\n\n\n\n\n\nSolution\n\n\n\n\n\n\n# Plot density of weight change by quitting status (base R plotting)\nwt_noquit &lt;- nhefs$wt82_71[nhefs$qsmk == 0]\nwt_quit   &lt;- nhefs$wt82_71[nhefs$qsmk == 1]\n\nplot(density(wt_noquit, na.rm=TRUE), col=\"blue\", lwd=2,\n     main=\"Weight Change Distribution by Smoking Cessation Status\",\n     xlab=\"Weight change 1971 to 1982 (kg)\")\nlines(density(wt_quit, na.rm=TRUE), col=\"red\", lwd=2)\nlegend(\"topright\", legend=c(\"Did NOT quit\",\"Quit smoking\"),\n       col=c(\"blue\",\"red\"), lwd=2)\n\n\n\n\n\n\n\n\n\nInterpretation tip\n\n\n\n\n\nIn the density plot above, we can observe how the weight change outcome is distributed for the two groups. We expect the red curve (quitters) to be shifted to the right (higher weight gains) compared to the blue curve (continuing smokers). Our goal is to estimate this effect more rigorously and adjust for confounding.\n\n\n\nNow that we have familiarized ourselves with the data, let’s move on to estimating the average causal effect using G-computation."
+  },
+  {
+    "objectID": "index.html#estimating-ate-via-g-computation-standardization",
+    "href": "index.html#estimating-ate-via-g-computation-standardization",
+    "title": "Causal Inference Lab: Smoking Cessation and Weight Gain (NHEFS Data)",
+    "section": "2. Estimating ATE via G-Computation (Standardization)",
+    "text": "2. Estimating ATE via G-Computation (Standardization)\nG-computation (or regression standardization) is a method to estimate causal effects by modeling the outcome as a function of treatment and covariates, then using that model to compute counterfactual outcomes. In practice, one common approach is:\n\nFit a regression model for the outcome \\(Y\\) using treatment \\(A\\) and confounders \\(X\\) as predictors (often an OLS linear model for continuous outcomes).\nUse this model to predict the mean outcome if everyone were treated and the mean outcome if everyone were untreated.\nThe difference between these two predicted means is the estimated Average Treatment Effect (ATE).\n\nHere, we’ll use a simple linear regression (lm) where we predict wt82_71 with qsmk and our covariates.\nWhat variables will you select to include in model? Fit a linear model using lm function.\n\n\n\n\n\n\nInterpretation tip\n\n\n\n\n\nWe can include age, sex, education, smokeintensity, exercise, active (and we might also include baseline weight wt71 to adjust for initial body size).\n\n\n\n\n\n\n\n\n\nCode\n\n\n\n\n\n# Define the formula for the outcome model\noutcome_model_formula &lt;- wt82_71 ~ qsmk + age + sex + education + \n                         smokeintensity + exercise + active + wt71\n\n# Fit the linear regression model\noutcome_lm &lt;- lm(outcome_model_formula, data = nhefs)\nsummary(outcome_lm)\n\n\n\nHow do you interpret this model?\n\n\n\n\n\n\nInterpretation tip\n\n\n\n\n\nAfter running the model, examine the model summary. The coefficient for qsmk is the regression-adjusted estimate of the effect of quitting smoking on weight change (in kg), holding other covariates constant. We expect this coefficient to be positive (since quitting tends to cause weight gain). For example, the coefficient is around 3, it suggests quitters gained about 3 kg more weight on average than they would have if they hadn’t quit (adjusting for the other factors). The p-value and confidence interval for qsmk will tell us if this effect is statistically significant (likely it is, given known effects).\n\n\n\nRather than just rely on the coefficient, let’s perform the G-computation explicitly.\nBut before going there, why do we actually need a causal model like G-computation?\n\n\n\n\n\n\nTip\n\n\n\n\n\nThe Regression Coefficient Can Be a Causal Effect… But Only Under Strong Assumptions\nWhen you run:\nlm(wt82_71 ~ qsmk + covariates)\n…and look at the coefficient for qsmk, it gives the conditional difference in outcomes between quitters and non-quitters after adjusting for the covariates.\nThis can be interpreted as a causal effect, only if the following conditions hold:\n\nNo unmeasured confounding: All common causes of both smoking cessation and weight gain are included in the regression model. If you miss any (e.g., mental health, dieting behavior), your estimate is biased.\nCorrect model specification: Linear regression assumes the relationships between variables are linear and additive. If the real relationships are non-linear or involve interactions (e.g., effect of quitting depends on age or smoking intensity), and you don’t model that, your effect estimate can be wrong.\nNo extrapolation / positivity: For each combination of covariates, there must be both treated and untreated individuals (i.e., both quitters and non-quitters). If certain groups never quit (e.g., very heavy smokers), you’re extrapolating outside the data.\n\nG-Computation Is More Transparent About Counterfactual Reasoning\nThe benefit of G-computation is not that it gives a different number (in linear models it often gives the same number as the qsmk coefficient!), but rather that:\n\nIt explicitly constructs counterfactuals: what would the outcome be if everyone quit vs if no one quit?\nIt works even when your model has nonlinear terms or interactions.\nIt makes it clear that you’re simulating a world where treatment is assigned differently — which is at the heart of causal inference.\n\nSo G-computation helps you see and understand the assumptions you’re making — and makes causal thinking explicit.\n\n\n\n\nWe use the fitted model to predict each individual’s outcome under treatment = 1 (everyone quits) and under treatment = 0 (no one quits).\nThen we take the average of these predictions to get \\(E[Y(1)]\\) and \\(E[Y(0)]\\).\nThe difference \\(E[Y(1)] - E[Y(0)]\\) is the ATE.\n\nHow would you do G-computation in R?\nHow do you interpret the results?\n\n\n\n\n\n\nCode\n\n\n\n\n\n# G-computation: predict outcomes if everyone is treated vs everyone untreated\n# First, make copies of the data with qsmk set to 1 and 0\ndata_treated &lt;- nhefs\ndata_untreated &lt;- nhefs\ndata_treated$qsmk &lt;- 1\ndata_untreated$qsmk &lt;- 0\n\n# Predict outcomes under each scenario\ny_hat_treated   &lt;- predict(outcome_lm, newdata = data_treated)\ny_hat_untreated &lt;- predict(outcome_lm, newdata = data_untreated)\n\n# Calculate average predicted outcomes and ATE\nmean(y_hat_treated)    # E[Y(1)] \nmean(y_hat_untreated)  # E[Y(0)]\nate_gcomp &lt;- mean(y_hat_treated) - mean(y_hat_untreated)\nate_gcomp\nThe result ate_gcomp is our G-computation estimate of the ATE. This should closely match the qsmk coefficient from the linear model (since in a linear model without interaction terms, the effect is constant).\nInterpretation: ate_gcomp comes out to ~3.2 (kg). That would mean we estimate that, on average, quitting smoking causes an increase of 3.2 kg in body weight over 10 years (with all else being equal). This is our causal effect estimate under the assumptions that we have controlled for all confounders in the model and that the linear model is correctly specified.\n\n\n\nAre all the confounders properly adjusted for? If we omitted something like smokeyrs or other health indicators, those could bias results. In a real analysis, careful selection of covariates and model checking would be necessary. For our practice, we’ll proceed with the set we have.\n\nCheck: Crude vs Adjusted\nIt might be illustrative to compare the regression-adjusted ATE with the crude difference in means (unadjusted). We can compute the raw difference in average weight change between quitters and non-quitters for comparison:\nmean_noquit &lt;- mean(nhefs$wt82_71[nhefs$qsmk==0])\nmean_quit   &lt;- mean(nhefs$wt82_71[nhefs$qsmk==1])\nc(mean_noquit, mean_quit, difference = mean_quit - mean_noquit)\nThis gives the unadjusted difference. Typically, the adjusted effect (ate_gcomp) may be a bit lower if some of the difference was due to confounders. For example, if quitters were younger on average (and younger people might gain more weight as they age regardless), the crude difference could overstate the effect of quitting. The regression adjusts for age (and others), potentially yielding a more accurate causal estimate.\nSo far, we’ve treated the effect as homogeneous (one number for everyone). Next, we will explore heterogeneous treatment effects using a causal forest."
+  },
+  {
+    "objectID": "index.html#causal-forests-for-heterogeneous-treatment-effects-cates",
+    "href": "index.html#causal-forests-for-heterogeneous-treatment-effects-cates",
+    "title": "Causal Inference Lab: Smoking Cessation and Weight Gain (NHEFS Data)",
+    "section": "3. Causal Forests for Heterogeneous Treatment Effects (CATEs)",
+    "text": "3. Causal Forests for Heterogeneous Treatment Effects (CATEs)\nWhile the ATE is a single summary, the effect of quitting smoking on weight might vary across individuals. For instance, perhaps heavy smokers gain more weight upon quitting than light smokers, or maybe the effect differs by sex or age. To investigate such Conditional Average Treatment Effects (CATEs), we can use a non-parametric method called a Causal Forest.\nCausal Forests (from the grf package) are an extension of random forests that focus on estimating treatment effects rather than just predicting outcomes. They use an algorithm with honest splitting and a splitting criterion designed to maximize differences in treatment effects between branches. Essentially, a causal forest will give us an estimate \\(\\hat{\\tau}(x)\\) for each unit that is the predicted treatment effect given that unit’s features \\(x\\).\nLet’s train a causal forest using our data. We need to provide:\n\nY (outcome vector)\nW (treatment indicator vector)\nX (covariate matrix/dataframe)\n\nWe should include all the confounders in X. We’ll use the same set as in our regression (age, sex, education, smokeintensity, exercise, active, wt71, etc.). The causal_forest() function will handle the rest. We might specify a random seed for reproducibility.\nPerform the modeling using causal_forest and plot the estimated CATE using hist\n\n\n\n\n\n\nCode\n\n\n\n\n\n# Prepare data for causal forest\nY &lt;- as.vector(nhefs$wt82_71)\nW &lt;- as.vector(nhefs$qsmk)\n# Covariate matrix X (exclude outcome and treatment themselves)\nX &lt;- nhefs[, c(\"age\", \"sex\", \"education\", \"smokeintensity\", \"smokeyrs\",\n               \"exercise\", \"active\", \"wt71\")]\n\n# Convert factors to numeric\nX[] &lt;- lapply(X, function(x) {\n  if (is.factor(x) || is.character(x)) as.numeric(as.factor(x)) else x\n})\n\nX &lt;- as.matrix(X)\n# Train a causal forest\ncf_model &lt;- causal_forest(X, Y, W, num.trees = 2000,seed = 123)  # using 2000 trees for stability\nTraining the forest may take a little time (depending on your machine). Once it’s done, we can use the model to estimate individual treatment effects.\nLet’s get the CATE estimates for the training data itself:\n# Estimate CATE for each individual in the training set\ncates &lt;- predict(cf_model)$predictions\nsummary(cates)\nhist(cates, 50, main=\"Distribution of CATE estimates from Causal Forest\",\n     xlab=\"Estimated CATE (kg weight change due to quitting)\")\n\n\n\nHow do you interpret the distribution of CATEs?\n\n\n\n\n\n\nInterpretation tip\n\n\n\n\n\nThe hist will show the distribution of those CATE estimates. For example, you find that most estimated effects are positive (suggesting quitting causes weight gain for most people), but with some variation in magnitude. The CATEs range from, say, 1 kg to 7 kg for different individuals. If any are negative (less than 0), that would suggest the model thinks a few individuals could lose weight or have very little gain when quitting (though that might be an artifact or noise if not expected in reality).\n\n\n\nThe average of the CATE estimates from the forest is another way to estimate the ATE. We can compare that to our earlier result.\nmean(cates)  # average predicted treatment effect\nIn theory, \\(\\mathbb{E}[\\hat{\\tau}(X)]\\) from a well-trained causal forest should be close to the ATE. The forest has a method to directly compute an ATE with uncertainty using a double robust estimator:\nate_forest &lt;- average_treatment_effect(cf_model)\nate_forest\nThe output of average_treatment_effect will give an estimate and a confidence interval for the ATE. We expect this to be in the ballpark of our linear model’s ATE (possibly within the CI).\nNow, the real advantage of the causal forest is exploring heterogeneity. We should check which variables are most important in determining the heterogeneity of the treatment effect.\n\n3.1 Variable Importance in the Causal Forest\nWe can use variable_importance(cf_model) to see which covariates the forest found most useful for splitting on heterogeneity. This returns a numeric importance score for each variable (higher means more important). Let’s retrieve and sort these:\n\n\n\n\n\n\nCode\n\n\n\n\n\n# Variable importance for treatment effect heterogeneity\nvimp &lt;- variable_importance(cf_model)\nnames(vimp) &lt;- colnames(X)\nsort(vimp, decreasing = TRUE)\n\n\n\nVisualize these importance scores as a simple bar plot for clarity\n\n\n\n\n\n\nCode\n\n\n\n\n\n# Barplot of variable importance\nsorted_vimp &lt;- sort(vimp)\nbarplot(sorted_vimp, horiz=TRUE, las=1,\n        main=\"Variable Importance (Causal Forest)\",\n        xlab=\"Relative importance\")\n\n\n\nInterpreting the importance: Unlike a predictive random forest where importance indicates contribution to predicting Y, here it indicates contribution to treatment effect heterogeneity. For instance, if smokeyrs is among the top ones, it implies that the effect of quitting might differ for long time smokers versus other smokers (the forest found splitting on smoking years improved treatment effect estimates). If sex is low, the effect might not differ between men and women, etc. We should combine this with economic or scientific reasoning.\n\n\n3.2 Checking Causal Forest Calibration and Interpretation\nBefore acting on the forest’s results, it’s good to check how well it fits the data. The grf package provides a calibration test via test_calibration(cf_model). This function assesses whether the forest’s predictions are reliable, by testing if the forest’s predicted CATEs are consistent with the observed outcomes in held-out data.\nRun the calibration test\n\n\n\n\n\n\nCode\n\n\n\n\n\ncalib &lt;- test_calibration(cf_model)\ncalib\n\n\n\nThis is effectively regressing the actual outcome differences on the forest’s predicted effects. The ideal result for a well-calibrated model is:\n\nmean.forest.prediction coefficient ≈ 1 (meaning the overall ATE the forest predicts matches the truth),\ndifferential.forest.prediction coefficient ≈ 1 (meaning the variations in CATE the forest predicts correspond to real variations).\n\nIf differential.forest.prediction is significantly less than 1 or not significant, it might mean the forest’s heterogeneity might not be very reliable (perhaps the true effect is more homogeneous than the model suggests, or we might be overfitting heterogeneity). If it’s close to 1 and significant, that gives confidence that the forest captured genuine heterogeneity.\nAnother diagnostic: We can use best_linear_projection to summarize how the CATE varies with covariates. This function will essentially run a regression of the forest’s predicted CATE on the covariates (with a doubly robust approach). It gives an interpretable linear approximation to the heterogeneity.\n**Try best_linear_projection on the forest.* * ::: {.callout-tip collapse=“true”} ### Code\nblp &lt;- best_linear_projection(cf_model, A = X)\nblp\nThe result will list coefficients for each covariate in X (like age, sex, etc.) indicating how the treatment effect correlates with those covariates. For example, if the sex coefficient in the BLP is 1.5, it might suggest that (all else equal) the effect for, say, males vs females differs by 1.5 kg. If smokeintensity has a positive coefficient, it suggests higher baseline intensity leads to larger weight gain upon quitting, etc. Essentially, best_linear_projection is giving a simpler linear story of the heterogeneity that the forest found.\nImportant: These coefficients are not the same as a direct regression on the outcome; they specifically target the treatment effect. A variable could have no association with outcome directly but still predict heterogeneity of the effect. :::\nAt this point, we have:\n\nAn overall ATE from the forest (ate_forest),\nA sense of which features drive heterogeneity (variable_importance and best_linear_projection),\nSome diagnostics on whether our heterogeneity findings are reliable (test_calibration).\n\nWe might conclude from these that, for example, the effect of quitting is positive for nearly everyone, but it tends to be larger for heavy smokers and perhaps slightly larger for younger individuals (if that’s what your model found). This kind of insight tells us who is most affected by the treatment.\nNext, let’s use these insights to inform a treatment policy."
+  },
+  {
+    "objectID": "index.html#learning-an-optimal-treatment-assignment-policy",
+    "href": "index.html#learning-an-optimal-treatment-assignment-policy",
+    "title": "Causal Inference Lab: Smoking Cessation and Weight Gain (NHEFS Data)",
+    "section": "4. Learning an Optimal Treatment Assignment Policy",
+    "text": "4. Learning an Optimal Treatment Assignment Policy\nFinally, we’ll explore how to go from estimated CATEs to a treatment policy. A treatment policy is a rule that decides which individuals should get the treatment (in this case, be encouraged to quit smoking) versus not, based on their covariates, with the aim of maximizing some outcome metric (here, perhaps minimizing weight gain).\nIn a real health context, recommending someone not quit smoking to avoid weight gain would be unethical since smoking has many other harms. For the sake of this exercise, however, we treat it as a theoretical exercise in policy learning, imagine weight change is the primary outcome of interest for some reason. The policytree package finds a decision tree that maximizes expected welfare (outcome) by assigning treatment to those for whom it is most beneficial. In our scenario, if we treat weight gain as a “bad” outcome, we might want to assign the “quit smoking” treatment to those who would gain the least weight (or even lose weight) from quitting, and perhaps not assign it to those who would gain a lot of weight. However, to use the tool straightforwardly, we’ll assume we want to maximize weight (just as an illustration of the technique).\nThe procedure:\n\nWe obtain doubly robust scores for each individual, which represent outcome predictions under treated and control for use in policy learning.\nFeed these into policy_tree which will produce an optimal tree of a given depth.\n\nThe double_robust_scores() function from policytree can take our causal forest and produce a matrix of estimated outcome if treated vs if control for each unit. Each row gives something like (control, treated) for that individual, estimated in a robust way. The policy learning then figures out, for a given complexity (max tree depth), which splits yield the best assignment.\nLet’s do this for a simple policy tree of depth 2 (a tree with 2 splits, thus up to 4 leaves). Depth 2 is a reasonable complexity for an easy interpretation.\n# Compute doubly robust score estimates from the causal forest\ndr_scores &lt;- double_robust_scores(cf_model)  # matrix with columns \"control\" and \"treated\"\nflipped_scores &lt;- -dr_scores  # flips both treated and control outcomes\n# Learn an optimal policy tree of depth 2\npolicy &lt;- policy_tree(X = as.matrix(X),                     # features (must be matrix)\n                      Gamma = flipped_scores,                   # doubly robust scores\n                      depth = 2)\npolicy\nplot(policy)\nThe printed output of policy will describe the tree structure.\n\n“Actions: 1: control 2: treated” means by convention, Action 1 = do not give treatment (i.e., do not encourage quitting), Action 2 = give treatment (encourage quitting).\n\nThe policy tree has found a simple rule that segments people by some key variables and assigns the “quit” intervention where it expects better outcomes (i.e., less weight gain). For example, the hypothetical policy above would mean: among active people, those with shorter smoking histories are safer to treat (less risk of weight gain). But if they smoked for many years, even though active, the model predicts more weight gain after quitting, so avoids recommending it. Similarly among inactive individuals, quitting is only recommended for the elderly (perhaps because weight gain is less of a concern or less likely at older ages).\nAgain, I emphasize this is a purely data-driven illustration. In reality, one would include a more comprehensive utility (quitting has huge health benefits beyond weight). But as a learning tool, the policy_tree shows how using causal estimates we can derive personalized decision rules."
+  },
+  {
+    "objectID": "index.html#conclusion",
+    "href": "index.html#conclusion",
+    "title": "Causal Inference Lab: Smoking Cessation and Weight Gain (NHEFS Data)",
+    "section": "5. Conclusion",
+    "text": "5. Conclusion\nIn this lab, we walked through a complete example of causal inference analysis:\n\nData identification: We identified the treatment (qsmk), outcome (wt82_71), and key covariates (age, sex, education, smoking intensity, etc.) in the NHEFS dataset.\nATE via G-computation: We fit a linear model to estimate the average effect of smoking cessation on weight gain, finding that quitting smoking is associated with a significant increase in weight (on the order of a few kilograms) after adjusting for confounders.\nCausal Forest for CATEs: We used a causal forest to uncover heterogeneity in the treatment effect. This allowed us to see that certain factors (e.g., baseline smoking intensity, sex, etc.) influence how much weight individuals gain from quitting. We evaluated the forest using built-in diagnostics: checking the overall ATE (which was consistent with the regression), identifying important variables driving heterogeneity, and using calibration tests to ensure the forest wasn’t overfitting.\nPolicy Learning: We leveraged the CATE estimates to derive an optimal treatment policy using a shallow decision tree. This policy provides an interpretable decision rule for assigning the treatment in a way that maximizes the expected outcome. We interpreted the policy tree and calculated its expected outcome, solidifying the link between causal insights and decision-making.\n\nThroughout, we focused on practical implementation in base R, giving you experience with the code and output interpretation at each step. You can extend this analysis in various ways:\n\nTry different model specifications or additional covariates in the outcome regression.\nIncrease the depth of the policy tree or try a different approach (but note deeper trees can become complex to interpret).\nValidate the causal forest by splitting the data or using out-of-sample tests.\nIf interested in the theory, consider why each step requires certain assumptions (unconfoundedness, model correctness, etc.), and what the diagnostics are telling us.\n\nWe hope this lab has given you a clearer understanding of how to do causal inference in R, bridging the gap between conceptual formulas and real-world data analysis. The skills practiced here – regression adjustment, using causal machine learning models, and policy derivation, are powerful tools in a researcher’s arsenal for investigating causal questions in observational data."
+  },
+  {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "About",
+    "section": "",
+    "text": "About this site\n\n1 + 1\n\n[1] 2"
+  }
+]
