@@ -158,7 +158,7 @@
     "href": "cf.html#applying-a-causal-forest-in-r",
     "title": "Machine Learning for Heterogeneous Treatment Effect",
     "section": "Applying a Causal Forest in R",
-    "text": "Applying a Causal Forest in R\n\nWe use the grf package to estimate how maternal smoking\naffects infant birthweight, and how this effect varies across subgroups.\nlibrary(grf)\n\n# Prepare the data\ndata_cf &lt;- as.data.frame(data[, c(\"age_group\", \"bwt\", \"ptl\", \"ht\", \"ui\", \"ftv\", \"lwt\", \"smoke\")])\ndata_cf$age_group &lt;- as.numeric(data_cf$age_group)  # Treat age_group as numeric\n\n# Covariates (X): all except outcome and treatment\nX &lt;- data_cf[, !colnames(data_cf) %in% c(\"bwt\", \"smoke\")]\nY &lt;- data_cf$bwt\nW &lt;- ifelse(data_cf$smoke==\"Smoker\",1,0)\n# Fit the causal forest\ncf &lt;- causal_forest(X = X, Y = Y, W =W, seed = 123)\n\n# Summary\nprint(cf)\n\nGRF forest object of type causal_forest \nNumber of trees: 2000 \nNumber of training samples: 189 \nVariable importance: \n    1     2     3     4     5     6 \n0.257 0.006 0.000 0.006 0.187 0.501"
+    "text": "Applying a Causal Forest in R\n\nWe use the grf package to estimate how maternal smoking\naffects infant birthweight, and how this effect varies across subgroups.Data: 189 births from Baystate Medical Center (1986). Variables:\nage: mother’s age\nlwt: mother’s weight\nrace: 1 = white, 2 = black, 3 = other\nsmoke: smoked during pregnancy\nptl: number of prior premature labors\nht: history of hypertension\nui: uterine irritability\nftv: first trimester physician visits\nbwt: birthweight in grams (outcome)\n\nlibrary(grf)\n\n# Prepare the data\ndata_cf &lt;- as.data.frame(data[, c(\"age_group\", \"bwt\", \"ptl\", \"ht\", \"ui\", \"ftv\", \"lwt\", \"smoke\")])\ndata_cf$age_group &lt;- as.numeric(data_cf$age_group)  # Treat age_group as numeric\n\n# Covariates (X): all except outcome and treatment\nX &lt;- data_cf[, !colnames(data_cf) %in% c(\"bwt\", \"smoke\")]\nY &lt;- data_cf$bwt\nW &lt;- ifelse(data_cf$smoke==\"Smoker\",1,0)\n# Fit the causal forest\ncf &lt;- causal_forest(X = X, Y = Y, W =W, seed = 123)\n\n# Summary\nprint(cf)\n\nGRF forest object of type causal_forest \nNumber of trees: 2000 \nNumber of training samples: 189 \nVariable importance: \n    1     2     3     4     5     6 \n0.257 0.006 0.000 0.006 0.187 0.501"
   },
   {
     "objectID": "cf.html#applying-a-causal-forest-in-r-1",
@@ -207,21 +207,28 @@
     "href": "cf.html#decision-rules",
     "title": "Machine Learning for Heterogeneous Treatment Effect",
     "section": "Decision Rules",
-    "text": "Decision Rules\n\nNow that we’ve learned how to estimate individual treatment effects using causal forests:What can we do with that information?. . .Goal: Personalized Decision-MakingInstead of applying one rule to everyone, we want to learn:“Who should get the treatment and who should not?”This is called a treatment policy:\\[\n\\pi(x) \\in \\{0, 1\\}\n\\]\n\\(\\pi(x) = 1\\) → assign treatment\n\\(\\pi(x) = 0\\) → assign control (no treatment)\nWe want a simple, interpretable rule to make this decision."
+    "text": "Decision Rules\n\nNow that we’ve learned how to estimate individual treatment effects using causal forests:What can we do with that information?Goal: Personalized Decision-MakingInstead of applying one rule to everyone, we want to learn:“Who should get the treatment and who should not?”This is called a treatment policy:\\[\n\\pi(x) \\in \\{0, 1\\}\n\\]\n\\(\\pi(x) = 1\\) → assign treatment\n\\(\\pi(x) = 0\\) → assign control (no treatment)\nWe want a simple, interpretable rule to make this decision."
   },
   {
     "objectID": "cf.html#learning-optimal-treatment-policies-with-policytree",
     "href": "cf.html#learning-optimal-treatment-policies-with-policytree",
     "title": "Machine Learning for Heterogeneous Treatment Effect",
     "section": "Learning Optimal Treatment Policies with policytree",
-    "text": "Learning Optimal Treatment Policies with policytree\n\nThe policytree package learns a shallow decision tree that tells us:“Based on their profile, should this person receive the treatment?”What We Provide:\nCovariates \\(X\\)\nReward scores: doubly robust scores (Γ̂), which quantify how beneficial treatment is\nWe create a reward matrix for each person:cost &lt;- ate[[\"estimate\"]] \ndr.scores&lt;-get_scores(cf)\ndr.rewards &lt;- cbind(control = -dr.scores,\n                    treat = dr.scores - cost)\nReward if not treated: \\(-\\hat{\\tau}_i\\)\nReward if treated: \\(\\hat{\\tau}_i - \\text{cost}\\)\nThen we fit:library(policytree)\ntree &lt;- policy_tree(X, dr.rewards, depth = 2)\nplot(tree)The output is a clear, interpretable tree that assigns treatment based on maximizing expected benefit"
+    "text": "Learning Optimal Treatment Policies with policytree\n\nThe policytree package learns a shallow decision tree that tells us:“Based on their profile, should this person receive the treatment?”What We Provide:\nCovariates \\(X\\)\nReward scores: doubly robust scores (Γ̂), which quantify how beneficial treatment is"
   },
   {
-    "objectID": "cf.html#learning-optimal-treatment-policies-with-policytree-1",
-    "href": "cf.html#learning-optimal-treatment-policies-with-policytree-1",
+    "objectID": "cf.html#example",
+    "href": "cf.html#example",
     "title": "Machine Learning for Heterogeneous Treatment Effect",
-    "section": "Learning Optimal Treatment Policies with policytree",
-    "text": "Learning Optimal Treatment Policies with policytree\n\n\nlibrary(policytree)\nate&lt;-average_treatment_effect(cf)\ncost &lt;- ate[[\"estimate\"]] \ndr.scores&lt;-get_scores(cf)\ndr.rewards &lt;- cbind(control = -dr.scores,\n                    treat = dr.scores - cost)\nnot.missing &lt;- which(complete.cases(X))\ntree &lt;- policy_tree(X[not.missing,], dr.rewards[not.missing,],depth = 2)\nplot(tree)"
+    "section": "Example",
+    "text": "Example\n\nFor example we want to offer a program to help pregnant women quit smoking…\nThe program is expensive\nIt requires time, staff, and follow-up\nNot everyone benefits equally\nGoal: Who should we offer the program to?We define rewards using double_robust_scoresdr.scores&lt;-policytree::double_robust_scores(cf)\nhead(dr.scores)\n\n      control  treated\n[1,] 2306.767 2662.737\n[2,] 2058.634 2939.755\n\n\nControl (0 = not smoking): Expected outcome if the person does not smoke\nTreated (1 = smoking): Expected outcome if the person smokes\nThen we fit:library(policytree)\ntree &lt;- policy_tree(X, dr.scores, depth = 2)\nplot(tree)"
+  },
+  {
+    "objectID": "cf.html#example-1",
+    "href": "cf.html#example-1",
+    "title": "Machine Learning for Heterogeneous Treatment Effect",
+    "section": "Example",
+    "text": "Example\n\n\nlibrary(policytree)\ndr.scores&lt;-policytree::double_robust_scores(cf)\nnot.missing &lt;- which(complete.cases(X))\ntree &lt;- policy_tree(X[not.missing,], dr.scores[not.missing,],depth = 2)\nplot(tree,leaf.labels = c(\"offer\",\"no offer\"))"
   },
   {
     "objectID": "cf.html#summary",

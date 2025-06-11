@@ -601,7 +601,7 @@ they let us estimate <strong>individualized causal effects</strong> flexibly and
 <li>Finds splits that <strong>maximize differences in treatment effects</strong></li>
 <li>Compares outcomes between treated and control within each leaf</li>
 <li>Averages those differences across many randomized trees</li>
-</ul><p>Result: An estimate of <span class="math inline">\(\widehat{\tau}(x)\)</span> for each individual</p>
+</ul><p>Result: An estimate of <span class="math inline">\(\widehat{\tau}(x)\)</span> for each individual</p><p><img data-src="https://upload.wikimedia.org/wikipedia/commons/4/4e/Random_forest_explain.png" data-wdith="10"></p>
 </div>
 </section>
 <section id="how-do-causal-trees-decide-where-to-split" class="slide level2">
@@ -620,9 +620,19 @@ n_L \cdot n_R \cdot ( \hat{\tau}_L - \hat{\tau}_R )^{2},
 </section>
 <section id="applying-a-causal-forest-in-r" class="slide level2">
 <h2>Applying a Causal Forest in R</h2>
-<div class="columns" style="font-size: 70%;">
+<div class="columns" style="font-size: 60%;">
 <p>We use the <code>grf</code> package to estimate how <strong>maternal smoking</strong><br>
-affects <strong>infant birthweight</strong>, and how this effect varies across subgroups.</p><div class="cell">
+affects <strong>infant birthweight</strong>, and how this effect varies across subgroups.</p><p><strong>Data:</strong> 189 births from Baystate Medical Center (1986). <strong>Variables:</strong></p><ul>
+<li><code>age</code>: mother’s age</li>
+<li><code>lwt</code>: mother’s weight</li>
+<li><code>race</code>: 1 = white, 2 = black, 3 = other</li>
+<li><code>smoke</code>: smoked during pregnancy</li>
+<li><code>ptl</code>: number of prior premature labors</li>
+<li><code>ht</code>: history of hypertension</li>
+<li><code>ui</code>: uterine irritability</li>
+<li><code>ftv</code>: first trimester physician visits</li>
+<li><code>bwt</code>: birthweight in grams (outcome)</li>
+</ul><div class="cell">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a></a><span class="fu">library</span>(grf)</span>
 <span id="cb11-2"><a></a></span>
 <span id="cb11-3"><a></a><span class="co"># Prepare the data</span></span>
@@ -814,7 +824,7 @@ Y_i \approx \mu(X_i) + (2W_i - 1) \cdot \hat{\tau}(X_i)
 <section id="decision-rules" class="slide level2">
 <h2>Decision Rules</h2>
 <div class="columns" style="font-size: 70%;">
-<p>Now that we’ve learned how to estimate <strong>individual treatment effects</strong> using causal forests:</p><p>What can we <strong>do</strong> with that information?</p><p>. . .</p><p>Goal: Personalized Decision-Making</p><p>Instead of applying one rule to everyone, we want to learn:</p><p>“Who should get the treatment and who should not?”</p><p>This is called a <strong>treatment policy</strong>:</p><p><span class="math display">\[
+<p>Now that we’ve learned how to estimate <strong>individual treatment effects</strong> using causal forests:</p><p>What can we do with that information?</p><p>Goal: Personalized Decision-Making</p><p>Instead of applying one rule to everyone, we want to learn:</p><p>“Who should get the treatment and who should not?”</p><p>This is called a <strong>treatment policy</strong>:</p><p><span class="math display">\[
 \pi(x) \in \{0, 1\}
 \]</span></p><ul>
 <li><span class="math inline">\(\pi(x) = 1\)</span> → assign treatment</li>
@@ -828,33 +838,43 @@ Y_i \approx \mu(X_i) + (2W_i - 1) \cdot \hat{\tau}(X_i)
 <p>The <code>policytree</code> package learns a <strong>shallow decision tree</strong> that tells us:</p><p>“Based on their profile, should this person receive the treatment?”</p><p>What We Provide:</p><ul>
 <li><strong>Covariates</strong> <span class="math inline">\(X\)</span></li>
 <li><strong>Reward scores</strong>: doubly robust scores (Γ̂), which quantify how beneficial treatment is</li>
-</ul><p>We create a <strong>reward matrix</strong> for each person:</p><div class="sourceCode" id="cb23"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a></a>cost <span class="ot">&lt;-</span> ate[[<span class="st">"estimate"</span>]] </span>
-<span id="cb23-2"><a></a>dr.scores<span class="ot">&lt;-</span><span class="fu">get_scores</span>(cf)</span>
-<span id="cb23-3"><a></a>dr.rewards <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="at">control =</span> <span class="sc">-</span>dr.scores,</span>
-<span id="cb23-4"><a></a>                    <span class="at">treat =</span> dr.scores <span class="sc">-</span> cost)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div><ul>
-<li>Reward if <strong>not treated</strong>: <span class="math inline">\(-\hat{\tau}_i\)</span></li>
-<li>Reward if <strong>treated</strong>: <span class="math inline">\(\hat{\tau}_i - \text{cost}\)</span></li>
-</ul><p>Then we fit:</p><div class="sourceCode" id="cb24"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a></a><span class="fu">library</span>(policytree)</span>
-<span id="cb24-2"><a></a>tree <span class="ot">&lt;-</span> <span class="fu">policy_tree</span>(X, dr.rewards, <span class="at">depth =</span> <span class="dv">2</span>)</span>
-<span id="cb24-3"><a></a><span class="fu">plot</span>(tree)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div><p>The output is a clear, interpretable tree that assigns treatment based on maximizing <strong>expected benefit</strong></p>
+</ul>
 </div>
 </section>
-<section id="learning-optimal-treatment-policies-with-policytree-1" class="slide level2">
-<h2>Learning Optimal Treatment Policies with <code>policytree</code></h2>
+<section id="example" class="slide level2">
+<h2>Example</h2>
+<div class="columns" style="font-size: 70%;">
+<p>For example we want to offer a program to help pregnant women quit smoking…</p><ul>
+<li>The program is <strong>expensive</strong></li>
+<li>It requires time, staff, and follow-up</li>
+<li>Not everyone benefits equally</li>
+</ul><p>Goal: Who should we offer the program to?</p><p>We define rewards using <code>double_robust_scores</code></p><div class="sourceCode" id="cb23"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a></a>dr.scores<span class="ot">&lt;-</span>policytree<span class="sc">::</span><span class="fu">double_robust_scores</span>(cf)</span>
+<span id="cb23-2"><a></a><span class="fu">head</span>(dr.scores)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div><div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>      control  treated
+[1,] 2306.767 2662.737
+[2,] 2058.634 2939.755</code></pre>
+</div>
+</div><ul>
+<li><p>Control (0 = not smoking): Expected outcome if the person does not smoke</p></li>
+<li><p>Treated (1 = smoking): Expected outcome if the person smokes</p></li>
+</ul><p>Then we fit:</p><div class="sourceCode" id="cb25"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a></a><span class="fu">library</span>(policytree)</span>
+<span id="cb25-2"><a></a>tree <span class="ot">&lt;-</span> <span class="fu">policy_tree</span>(X, dr.scores, <span class="at">depth =</span> <span class="dv">2</span>)</span>
+<span id="cb25-3"><a></a><span class="fu">plot</span>(tree)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="example-1" class="slide level2">
+<h2>Example</h2>
 <div class="columns" style="font-size: 70%;">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a></a><span class="fu">library</span>(policytree)</span>
-<span id="cb25-2"><a></a>ate<span class="ot">&lt;-</span><span class="fu">average_treatment_effect</span>(cf)</span>
-<span id="cb25-3"><a></a>cost <span class="ot">&lt;-</span> ate[[<span class="st">"estimate"</span>]] </span>
-<span id="cb25-4"><a></a>dr.scores<span class="ot">&lt;-</span><span class="fu">get_scores</span>(cf)</span>
-<span id="cb25-5"><a></a>dr.rewards <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="at">control =</span> <span class="sc">-</span>dr.scores,</span>
-<span id="cb25-6"><a></a>                    <span class="at">treat =</span> dr.scores <span class="sc">-</span> cost)</span>
-<span id="cb25-7"><a></a>not.missing <span class="ot">&lt;-</span> <span class="fu">which</span>(<span class="fu">complete.cases</span>(X))</span>
-<span id="cb25-8"><a></a>tree <span class="ot">&lt;-</span> <span class="fu">policy_tree</span>(X[not.missing,], dr.rewards[not.missing,],<span class="at">depth =</span> <span class="dv">2</span>)</span>
-<span id="cb25-9"><a></a><span class="fu">plot</span>(tree)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a></a><span class="fu">library</span>(policytree)</span>
+<span id="cb26-2"><a></a>dr.scores<span class="ot">&lt;-</span>policytree<span class="sc">::</span><span class="fu">double_robust_scores</span>(cf)</span>
+<span id="cb26-3"><a></a>not.missing <span class="ot">&lt;-</span> <span class="fu">which</span>(<span class="fu">complete.cases</span>(X))</span>
+<span id="cb26-4"><a></a>tree <span class="ot">&lt;-</span> <span class="fu">policy_tree</span>(X[not.missing,], dr.scores[not.missing,],<span class="at">depth =</span> <span class="dv">2</span>)</span>
+<span id="cb26-5"><a></a><span class="fu">plot</span>(tree,<span class="at">leaf.labels =</span> <span class="fu">c</span>(<span class="st">"offer"</span>,<span class="st">"no offer"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div class="grViz html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-3a8fc0236ad6d9ff8644" style="width:960px;height:480px;"></div>
-<script type="application/json" data-for="htmlwidget-3a8fc0236ad6d9ff8644">{"x":{"diagram":"digraph nodes { \n node [shape=box] ;\n0 [label=\" age_group <= 2 \"] ;\n0 -> 1 [labeldistance=2.5, labelangle=45, headlabel=\"True\"];\n0 -> 2 [labeldistance=2.5, labelangle=-45, headlabel=\"False\"]\n1 [label=\" ftv <= 0 \"] ;\n1 -> 3  ;\n1 -> 4  ;\n3  [shape=box,style=filled,color=\".7 .3 1.0\" , label=\" leaf node\n action = 2 \"];\n4  [shape=box,style=filled,color=\".7 .3 1.0\" , label=\" leaf node\n action = 1 \"];\n2 [label=\" ftv <= 1 \"] ;\n2 -> 5  ;\n2 -> 6  ;\n5  [shape=box,style=filled,color=\".7 .3 1.0\" , label=\" leaf node\n action = 1 \"];\n6  [shape=box,style=filled,color=\".7 .3 1.0\" , label=\" leaf node\n action = 2 \"];\n}","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+<script type="application/json" data-for="htmlwidget-3a8fc0236ad6d9ff8644">{"x":{"diagram":"digraph nodes { \n node [shape=box] ;\n0 [label=\" age_group <= 1 \"] ;\n0 -> 1 [labeldistance=2.5, labelangle=45, headlabel=\"True\"];\n0 -> 2 [labeldistance=2.5, labelangle=-45, headlabel=\"False\"]\n1 [label=\" ftv <= 0 \"] ;\n1 -> 3  ;\n1 -> 4  ;\n3  [shape=box,style=filled,color=\".7 .3 1.0\" , label=\" no offer \"];\n4  [shape=box,style=filled,color=\".7 .3 1.0\" , label=\" offer \"];\n2 [label=\" lwt <= 105 \"] ;\n2 -> 5  ;\n2 -> 6  ;\n5  [shape=box,style=filled,color=\".7 .3 1.0\" , label=\" no offer \"];\n6  [shape=box,style=filled,color=\".7 .3 1.0\" , label=\" offer \"];\n}","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
 </div>
 </div>
 </div>
